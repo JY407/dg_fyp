@@ -1,12 +1,16 @@
 <?php
-use App\Livewire\Chat;
+
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 
-Route::get('/', function () {
-    return view('welcome');
-})->name('home');
+use App\Livewire\Home;
+use App\Livewire\Chat;
+
+// Route::get('/', function () {
+//     return view('welcome');
+// })->name('home');
+Volt::route('/', Home::class)->name('home');
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
