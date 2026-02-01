@@ -205,49 +205,59 @@
     font-weight: 500;
 }
 
+/* Notification Badge */
+.notification-badge {
+    position: absolute;
+    top: -2px;
+    right: -2px;
+    background: var(--accent-gradient);
+    color: white;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-primary);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Notification Item Hover */
+.notification-item:hover {
+    background: var(--surface);
+}
+
+.notification-item:hover .notification-icon {
+    transform: scale(1.1);
+    transition: transform var(--transition-fast);
+}
+
+/* Notification Header/Footer styles */
+.notification-header h4 {
+    color: var(--text-primary);
+}
+
+.notification-footer a:hover {
+    text-decoration: underline;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
-    .navbar-toggle {
-        display: flex;
+    .navbar-container {
+        padding: 0 var(--spacing-sm);
     }
 
-    .navbar-menu {
-        position: fixed;
-        top: 70px;
-        left: 0;
-        width: 100%;
-        flex-direction: column;
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--glass-border);
-        padding: var(--spacing-md);
-        gap: 0;
-        transform: translateX(-100%);
-        transition: transform var(--transition-base);
-    }
-
-    .navbar-menu.active {
-        transform: translateX(0);
-    }
-
-    .navbar-item {
-        width: 100%;
-    }
-
-    .navbar-link {
-        width: 100%;
-        padding: 1rem;
-    }
-
-    .navbar-dropdown {
-        position: static;
-        opacity: 1;
-        visibility: visible;
-        transform: none;
-        margin-top: var(--spacing-xs);
+    .navbar-brand span {
         display: none;
     }
 
-    .navbar-item.active .navbar-dropdown {
-        display: block;
+    .notification-dropdown {
+        width: calc(100vw - 2rem) !important;
+        right: 1rem !important;
+        position: fixed !important;
+        top: 70px !important;
     }
 }

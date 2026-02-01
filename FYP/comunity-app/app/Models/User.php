@@ -23,7 +23,19 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'unit_number',
+        'block',
+        'street',
+        'user_type',
+        'status',
+        'created_by',
+        'profile_photo_path',
     ];
+
+    public function familyMembers()
+    {
+        return $this->hasMany(User::class, 'created_by');
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -56,7 +68,14 @@ class User extends Authenticatable
         return Str::of($this->name)
             ->explode(' ')
             ->take(2)
-            ->map(fn ($word) => Str::substr($word, 0, 1))
+            ->map(fn($word) => Str::substr($word, 0, 1))
             ->implode('');
+    }
+    /**
+     * Get the user's visitors.
+     */
+    public function visitors()
+    {
+        return $this->hasMany(Visitor::class);
     }
 }

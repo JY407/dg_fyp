@@ -5,3 +5,7 @@
  */
 
 import './echo';
+
+// Import custom JavaScript
+import './main';
+

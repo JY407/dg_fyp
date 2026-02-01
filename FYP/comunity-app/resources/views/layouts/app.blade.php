@@ -1,38 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Community Connect')</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@700;800&display=swap"
+        rel="stylesheet">
 
-    <!-- Stylesheets -->
-<link rel="stylesheet" href="{{ asset('resources/css/styles.css') }}">
-<link rel="stylesheet" href="{{ asset('resources/css/components/navbar.css') }}">
-<link rel="stylesheet" href="{{ asset('resources/css/components/footer.css') }}">
-<link rel="stylesheet" href="{{ asset('resources/css/components/cards.css') }}">
-<script src="{{ asset('resources/js/main.js') }}"></script>
+    <!-- Vite CSS & JS -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @livewireStyles
 </head>
+
 <body>
-    {{-- Include Navbar --}}
-    @include('partials.navbar')
+    <div class="app-container">
+        {{-- Include Sidebar --}}
+        @include('partials.sidebar')
 
-    {{-- Page Content --}}
-    <main>
-        @yield('content')
-    </main>
+        {{-- Page Content --}}
+        <main class="main-content">
+            {{ $slot ?? '' }}
+            @yield('content')
 
-    {{-- Include Footer --}}
-    @include('partials.footer')
+            {{-- Include Footer --}}
+            {{-- Include Footer --}}
+            @unless(request()->routeIs('chat'))
+                @include('partials.footer')
+            @endunless
+        </main>
+    </div>
 
-    <!-- Scripts -->
-    <script src="{{ asset('js/main.js') }}"></script>
     @livewireScripts
 </body>
+
 </html>

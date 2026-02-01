@@ -7,13 +7,15 @@ const navbar = document.getElementById('navbar');
 const navbarToggle = document.getElementById('navbarToggle');
 const navbarMenu = document.getElementById('navbarMenu');
 
-window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
-        navbar.classList.add('scrolled');
-    } else {
-        navbar.classList.remove('scrolled');
-    }
-});
+if (navbar) {
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+        }
+    });
+}
 
 // Mobile Menu Toggle
 if (navbarToggle) {
@@ -68,13 +70,13 @@ const contactForm = document.getElementById('contactForm');
 if (contactForm) {
     contactForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        
+
         // Get form data
         const formData = new FormData(contactForm);
-        
+
         // Show success message (in a real app, this would send to a server)
         showNotification('Message sent successfully! We\'ll get back to you soon.', 'success');
-        
+
         // Reset form
         contactForm.reset();
     });
@@ -86,7 +88,7 @@ newsletterForms.forEach(form => {
     form.addEventListener('submit', (e) => {
         e.preventDefault();
         const email = form.querySelector('input[type="email"]').value;
-        
+
         if (email) {
             showNotification('Thank you for subscribing to our newsletter!', 'success');
             form.reset();
@@ -114,22 +116,22 @@ function showNotification(message, type = 'info') {
         animation: slideInRight 0.3s ease-out;
         max-width: 350px;
     `;
-    
+
     // Add icon based on type
     let icon = '✓';
     if (type === 'error') icon = '✗';
     if (type === 'warning') icon = '⚠';
     if (type === 'info') icon = 'ℹ';
-    
+
     notification.innerHTML = `
         <div style="display: flex; align-items: center; gap: 1rem;">
             <div style="font-size: 1.5rem;">${icon}</div>
             <div>${message}</div>
         </div>
     `;
-    
+
     document.body.appendChild(notification);
-    
+
     // Remove after 3 seconds
     setTimeout(() => {
         notification.style.animation = 'slideOutRight 0.3s ease-out';
@@ -194,20 +196,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Card Hover Effects Enhancement
 document.querySelectorAll('.glass-card, .feature-card, .post-card, .stats-card, .event-card').forEach(card => {
-    card.addEventListener('mouseenter', function() {
+    card.addEventListener('mouseenter', function () {
         this.style.transition = 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
     });
 });
 
 // Button Ripple Effect
 document.querySelectorAll('.btn').forEach(button => {
-    button.addEventListener('click', function(e) {
+    button.addEventListener('click', function (e) {
         const ripple = document.createElement('span');
         const rect = this.getBoundingClientRect();
         const size = Math.max(rect.width, rect.height);
         const x = e.clientX - rect.left - size / 2;
         const y = e.clientY - rect.top - size / 2;
-        
+
         ripple.style.cssText = `
             position: absolute;
             width: ${size}px;
@@ -219,9 +221,9 @@ document.querySelectorAll('.btn').forEach(button => {
             pointer-events: none;
             animation: ripple 0.6s ease-out;
         `;
-        
+
         this.appendChild(ripple);
-        
+
         setTimeout(() => ripple.remove(), 600);
     });
 });
@@ -246,7 +248,7 @@ document.head.appendChild(rippleStyle);
 function initTooltips() {
     const tooltipElements = document.querySelectorAll('[data-tooltip]');
     tooltipElements.forEach(el => {
-        el.addEventListener('mouseenter', function() {
+        el.addEventListener('mouseenter', function () {
             const tooltip = document.createElement('div');
             tooltip.className = 'tooltip';
             tooltip.textContent = this.getAttribute('data-tooltip');
@@ -262,15 +264,15 @@ function initTooltips() {
                 box-shadow: var(--shadow-md);
             `;
             document.body.appendChild(tooltip);
-            
+
             const rect = this.getBoundingClientRect();
             tooltip.style.left = rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2) + 'px';
             tooltip.style.top = rect.top - tooltip.offsetHeight - 10 + 'px';
-            
+
             this._tooltip = tooltip;
         });
-        
-        el.addEventListener('mouseleave', function() {
+
+        el.addEventListener('mouseleave', function () {
             if (this._tooltip) {
                 this._tooltip.remove();
                 this._tooltip = null;
@@ -308,7 +310,7 @@ if ('IntersectionObserver' in window) {
             }
         });
     });
-    
+
     document.querySelectorAll('img[data-src]').forEach(img => {
         imageObserver.observe(img);
     });

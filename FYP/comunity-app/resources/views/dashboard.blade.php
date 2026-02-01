@@ -1,18 +1,29 @@
-<x-layouts.app :title="__('Dashboard')">
-    <div class="flex h-full w-full flex-1 flex-col gap-4 rounded-xl">
-        <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-            </div>
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-            </div>
-            <div class="relative aspect-video overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-                <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
+@extends('layouts.app')
+
+@section('title', 'Dashboard - Community Connect')
+
+@section('content')
+    <section style="padding: 120px 0 80px; margin-top: 70px;">
+        <div class="container">
+            <h1>Welcome back, {{ auth()->user()->name }}!</h1>
+            <p class="text-secondary">Manage your community activities and stay connected with your neighbors.</p>
+
+            <div class="grid grid-3" style="margin-top: 2rem;">
+                <div class="glass-card">
+                    <h3>Quick Stats</h3>
+                    <p class="text-secondary">View your community activity</p>
+                </div>
+
+                <div class="glass-card">
+                    <h3>Recent Activity</h3>
+                    <p class="text-secondary">Latest updates from your community</p>
+                </div>
+
+                <div class="glass-card">
+                    <h3>Upcoming Events</h3>
+                    <p class="text-secondary">Don't miss out on community events</p>
+                </div>
             </div>
         </div>
-        <div class="relative h-full flex-1 overflow-hidden rounded-xl border border-neutral-200 dark:border-neutral-700">
-            <x-placeholder-pattern class="absolute inset-0 size-full stroke-gray-900/20 dark:stroke-neutral-100/20" />
-        </div>
-    </div>
-</x-layouts.app>
+    </section>
+@endsection

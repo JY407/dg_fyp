@@ -7,16 +7,19 @@ use Livewire\Volt\Volt;
 use App\Livewire\Home;
 use App\Livewire\Chat;
 
-// Route::get('/', function () {
-//     return view('welcome');
-// })->name('home');
-Volt::route('/', Home::class)->name('home');
+// Community Pages - Public Routes
+Route::view('/', 'home')->name('home');
+Route::view('/announcements', 'announcements')->name('announcements');
+Route::view('/events', 'events')->name('events');
+Route::view('/forum', 'forum')->name('forum');
+Route::view('/contact', 'contact')->name('contact');
 
+// Dashboard - Requires Authentication
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-Route::middleware(['auth'])->group(function () {
+Route::middleware(['auth', \App\Http\Middleware\EnsureNotAdmin::class])->group(function () {
     Route::redirect('settings', 'settings/profile');
 
     Volt::route('settings/profile', 'settings.profile')->name('profile.edit');
@@ -27,15 +30,32 @@ Route::middleware(['auth'])->group(function () {
         ->middleware(
             when(
                 Features::canManageTwoFactorAuthentication()
-                    && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
+                && Features::optionEnabled(Features::twoFactorAuthentication(), 'confirmPassword'),
                 ['password.confirm'],
                 [],
             ),
         )
         ->name('two-factor.show');
 
-    Route::get("chat",Chat::class)->name('chat');
+    Route::get("chat", Chat::class)->name('chat');
+    Route::resource('visitors', \App\Http\Controllers\VisitorController::class);
+
+    // Visitor Registration with Location Tracking
+    Volt::route('visitor-registration', 'visitor-registration')->name('visitor.register');
+
+    // Emergency Page
+    Route::view('emergency', 'emergency')->name('emergency');
 });
+
+Route::middleware(['auth', \App\Http\Middleware\IsAdmin::class])->prefix('admin')->name('admin.')->group(function () {
+    Volt::route('dashboard', 'admin.dashboard')->name('dashboard');
+    Volt::route('visitors/create', 'admin.create-visitor')->name('visitors.create');
+    Volt::route('verifications', 'admin.user-verification')->name('verifications');
+    Volt::route('duty-roster', 'admin.security-duties')->name('security-duties');
+});
+
+// Public Visitor Pass (No Auth Required) - For Real-time Tracking
+Route::get('/visitor/pass/{passCode}', \App\Livewire\VisitorPass::class)->name('visitor.pass');
 
 Route::middleware(['auth'])->group(function () {
 
@@ -74,4 +94,4 @@ Route::middleware(['auth'])->group(function () {
     //     return redirect('/signin');
     // })->name('logout');
 });
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

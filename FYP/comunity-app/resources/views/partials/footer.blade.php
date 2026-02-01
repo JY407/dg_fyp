@@ -20,11 +20,11 @@
             <div class="footer-section">
                 <h4 class="footer-title">Quick Links</h4>
                 <ul class="footer-links">
-                    <li><a href="{{ url('/') }}" class="footer-link">Home</a></li>
-                    <li><a href="{{ url('/dashboard') }}" class="footer-link">Dashboard</a></li>
-                    <li><a href="{{ url('/announcements') }}" class="footer-link">Announcements</a></li>
-                    <li><a href="{{ url('/events') }}" class="footer-link">Events</a></li>
-                    <li><a href="{{ url('/forum') }}" class="footer-link">Forum</a></li>
+                    <li><a href="{{ route('home') }}" class="footer-link">Home</a></li>
+                    <li><a href="{{ route('dashboard') }}" class="footer-link">Dashboard</a></li>
+                    <li><a href="{{ route('announcements') }}" class="footer-link">Announcements</a></li>
+                    <li><a href="{{ route('events') }}" class="footer-link">Events</a></li>
+                    <li><a href="{{ route('forum') }}" class="footer-link">Forum</a></li>
                 </ul>
             </div>
 
@@ -52,7 +52,7 @@
 
         <div class="footer-bottom">
             <p class="footer-copyright">
-                © 2026 Community Connect. All rights reserved.
+                © {{ date('Y') }} Community Connect. All rights reserved.
             </p>
             <ul class="footer-bottom-links">
                 <li><a href="#" class="footer-bottom-link">Privacy</a></li>

@@ -22,16 +22,18 @@ new class extends Component {
     }
 }; ?>
 
-<section class="mt-10 space-y-6">
-    <div class="relative mb-5">
-        <flux:heading>{{ __('Delete account') }}</flux:heading>
-        <flux:subheading>{{ __('Delete your account and all of its resources') }}</flux:subheading>
+<section class="glass-card-lg">
+    <div class="mb-5">
+        <h3 class="text-xl font-bold text-primary mb-2">{{ __('Delete Account') }}</h3>
+        <p class="text-secondary">
+            {{ __('Delete your account and all of its resources. This action cannot be undone.') }}</p>
     </div>
 
     <flux:modal.trigger name="confirm-user-deletion">
-        <flux:button variant="danger" x-data="" x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')" data-test="delete-user-button">
-            {{ __('Delete account') }}
-        </flux:button>
+        <button class="btn btn-outline" style="border-color: #f5576c; color: #f5576c;" x-data
+            x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')">
+            {{ __('Delete Account') }}
+        </button>
     </flux:modal.trigger>
 
     <flux:modal name="confirm-user-deletion" :show="$errors->isNotEmpty()" focusable class="max-w-lg">
@@ -51,7 +53,7 @@ new class extends Component {
                     <flux:button variant="filled">{{ __('Cancel') }}</flux:button>
                 </flux:modal.close>
 
-                <flux:button variant="danger" type="submit" data-test="confirm-delete-user-button">
+                <flux:button variant="danger" type="submit">
                     {{ __('Delete account') }}
                 </flux:button>
             </div>
