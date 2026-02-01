@@ -31,7 +31,7 @@ new class extends Component {
         session()->flash('message', 'Emergency Alert Sent! Management has been notified.');
     }
 }; ?>
-...
+
 
 
 <div class="min-h-screen relative overflow-hidden bg-slate-100 dark:bg-zinc-950 font-sans">
@@ -118,9 +118,11 @@ new class extends Component {
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Placeholder Data -->
                 @forelse($duties as $duty)
-                    <div class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow flex">
+                    <div
+                        class="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-shadow flex">
                         <!-- ID Photo Placeholder -->
-                        <div class="w-32 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border-r border-zinc-100 dark:border-zinc-800">
+                        <div
+                            class="w-32 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center border-r border-zinc-100 dark:border-zinc-800">
                             <div class="text-4xl font-black text-zinc-300 select-none">
                                 {{ substr($duty->guard_name, 0, 1) }}
                             </div>
@@ -132,21 +134,27 @@ new class extends Component {
                                 <h3 class="font-black text-lg text-zinc-900 dark:text-zinc-100 uppercase leading-none mb-1">
                                     {{ $duty->guard_name }}
                                 </h3>
-                                <span class="inline-block px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-bold uppercase rounded-sm mb-3">
+                                <span
+                                    class="inline-block px-2 py-0.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-xs font-bold uppercase rounded-sm mb-3">
                                     {{ $duty->shift }} Shift
                                 </span>
 
                                 <div class="space-y-1">
                                     <div class="flex items-center text-sm text-zinc-600 dark:text-zinc-400">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
+                                            </path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         </svg>
                                         <span class="font-mono">{{ $duty->location }}</span>
                                     </div>
                                     <div class="flex items-center text-sm text-zinc-500">
                                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                            </path>
                                         </svg>
                                         <span>{{ \Carbon\Carbon::parse($duty->date)->format('d M Y') }}</span>
                                     </div>
