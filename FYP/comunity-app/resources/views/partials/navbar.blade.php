@@ -1,8 +1,8 @@
 <nav class="navbar" id="navbar">
     <div class="navbar-container">
         <a href="{{ route('home') }}" class="navbar-brand">
-            <div class="navbar-logo">CC</div>
-            <span>Community Connect</span>
+            <div class="navbar-logo">LC</div>
+            <span>Lcare</span>
         </a>
 
         <div class="navbar-actions" style="display: flex; align-items: center; gap: 1rem;">

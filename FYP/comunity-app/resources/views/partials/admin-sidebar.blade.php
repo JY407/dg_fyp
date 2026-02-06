@@ -2,7 +2,7 @@
     <div class="sidebar-header">
         <a href="{{ route('admin.dashboard') }}" class="sidebar-brand">
             <div class="sidebar-logo" style="background: #ef4444;">Ad</div>
-            <span>CC Admin</span>
+            <span>Lcare Admin</span>
         </a>
     </div>
 
@@ -66,6 +66,17 @@
                     <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
                 </svg>
                 <span>Services</span>
+            </a>
+        </li>
+        <li>
+            <a href="{{ route('admin.culture-management') }}"
+                class="sidebar-link {{ request()->routeIs('admin.culture-management') ? 'active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 2a10 10 0 1 0 10 10 10 10 0 0 0-10-10zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
+                    <path d="M12 6v6l4 2"></path>
+                </svg>
+                <span>Culture</span>
             </a>
         </li>
     </ul>

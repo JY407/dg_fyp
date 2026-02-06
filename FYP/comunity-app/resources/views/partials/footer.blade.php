@@ -3,8 +3,8 @@
         <div class="footer-grid">
             <div class="footer-section">
                 <div class="footer-brand">
-                    <div class="footer-logo">CC</div>
-                    <span class="footer-brand-name">Community Connect</span>
+                    <div class="footer-logo">LC</div>
+                    <span class="footer-brand-name">Lcare</span>
                 </div>
                 <p class="footer-description">
                     Building stronger communities through better communication and engagement.
@@ -38,21 +38,12 @@
                 </ul>
             </div>
 
-            <div class="footer-section">
-                <h4 class="footer-title">Newsletter</h4>
-                <p style="color: var(--text-muted); margin-bottom: 1rem;">
-                    Subscribe to get weekly community updates
-                </p>
-                <form class="footer-newsletter">
-                    <input type="email" class="footer-newsletter-input" placeholder="Your email">
-                    <button type="submit" class="footer-newsletter-btn">Subscribe</button>
-                </form>
-            </div>
+
         </div>
 
         <div class="footer-bottom">
             <p class="footer-copyright">
-                © {{ date('Y') }} Community Connect. All rights reserved.
+                © {{ date('Y') }} Lcare. All rights reserved.
             </p>
             <ul class="footer-bottom-links">
                 <li><a href="#" class="footer-bottom-link">Privacy</a></li>

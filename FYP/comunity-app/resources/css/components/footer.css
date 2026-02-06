@@ -6,7 +6,7 @@
     background: var(--bg-secondary);
     border-top: 1px solid var(--glass-border);
     padding: var(--spacing-2xl) 0 var(--spacing-lg);
-    margin-top: var(--spacing-2xl);
+    margin-top: auto;
 }
 
 .footer-container {

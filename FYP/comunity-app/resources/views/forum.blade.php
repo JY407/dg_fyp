@@ -60,28 +60,29 @@
                         <div style="padding: 24px;">
                             <div class="flex justify-between items-start mb-4">
                                 <div class="flex gap-3 items-center">
-                                    <img src="https://ui-avatars.com/api/?name=Sarah+Johnson&background=0D8ABC&color=fff"
+                                    <img src="https://ui-avatars.com/api/?name=Ahmad+Zaki&background=FF512F&color=fff"
                                         style="width: 48px; height: 48px; border-radius: 50%;">
                                     <div>
-                                        <h3 style="margin: 0; font-weight: 700; color: white;">Sarah Johnson</h3>
+                                        <h3 style="margin: 0; font-weight: 700; color: white;">Ahmad Zaki</h3>
                                         <span style="color: #64748b; font-size: 0.85rem;">2 hours ago</span>
                                     </div>
                                 </div>
                                 <span
-                                    style="background: rgba(16, 185, 129, 0.1); color: #34d399; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Gardening</span>
+                                    style="background: rgba(16, 185, 129, 0.1); color: #34d399; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Workshop</span>
                             </div>
 
-                            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; color: #f1f5f9;">Community
-                                Garden Initiative 🌻</h2>
+                            <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; color: #f1f5f9;">
+                                Traditional
+                                Wau Making Workshop 🪁</h2>
                             <p style="color: #94a3b8; line-height: 1.6; margin-bottom: 20px;">
-                                Excited to announce our new community garden project! Join us this Saturday to help plant
-                                the first seeds. We have tomatoes, basil, and peppers ready to go!
+                                Organized a small workshop this weekend for anyone interested in learning how to make
+                                traditional Wau. It's a dying art we should preserve!
                             </p>
 
                             <!-- Gradient Image Placeholder -->
                             <div
-                                style="height: 200px; width: 100%; border-radius: 16px; background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(59, 130, 246, 0.2)); display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-                                <span style="color: rgba(255,255,255,0.5); font-weight: 600;">Event Image</span>
+                                style="height: 200px; width: 100%; border-radius: 16px; background: linear-gradient(135deg, rgba(255, 81, 47, 0.2), rgba(221, 36, 118, 0.2)); display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+                                <span style="color: rgba(255,255,255,0.5); font-weight: 600;">Workshop Image</span>
                             </div>
                         </div>
 
@@ -95,7 +96,7 @@
                                         d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z">
                                     </path>
                                 </svg>
-                                24 Likes
+                                48 Likes
                             </button>
                             <button
                                 style="background: none; border: none; color: #94a3b8; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
@@ -114,32 +115,32 @@
                         style="background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; padding: 24px;">
                         <div class="flex justify-between items-start mb-4">
                             <div class="flex gap-3 items-center">
-                                <img src="https://ui-avatars.com/api/?name=Mike+Chen&background=6366f1&color=fff"
+                                <img src="https://ui-avatars.com/api/?name=Dr+Sarah&background=6366f1&color=fff"
                                     style="width: 48px; height: 48px; border-radius: 50%;">
                                 <div>
-                                    <h3 style="margin: 0; font-weight: 700; color: white;">Mike Chen</h3>
+                                    <h3 style="margin: 0; font-weight: 700; color: white;">Dr. Sarah</h3>
                                     <span style="color: #64748b; font-size: 0.85rem;">5 hours ago</span>
                                 </div>
                             </div>
                             <span
-                                style="background: rgba(239, 68, 68, 0.1); color: #f87171; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Safety</span>
+                                style="background: rgba(239, 68, 68, 0.1); color: #f87171; padding: 4px 12px; border-radius: 99px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">Discussion</span>
                         </div>
 
-                        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; color: #f1f5f9;">Neighborhood
-                            Watch Update 🛡️</h2>
+                        <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 12px; color: #f1f5f9;">Favorite
+                            Malaysian Dish? 🍲</h2>
                         <p style="color: #94a3b8; line-height: 1.6; margin-bottom: 20px;">
-                            Monthly neighborhood watch meeting scheduled for next week. Important safety updates to discuss
-                            regarding the new gate system.
+                            We are compiling a list of must-try dishes for the upcoming community cookbook. Nasi Lemak is
+                            already number one, but what else?
                         </p>
 
                         <div
                             style="padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.05); display: flex; gap: 24px;">
                             <button
                                 style="background: none; border: none; color: #94a3b8; font-weight: 600; cursor: pointer;">❤️
-                                45 Likes</button>
+                                85 Likes</button>
                             <button
                                 style="background: none; border: none; color: #94a3b8; font-weight: 600; cursor: pointer;">💬
-                                8 Comments</button>
+                                32 Comments</button>
                         </div>
                     </div>
 

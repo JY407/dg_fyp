@@ -3,7 +3,7 @@
 
 <head>
     @include('partials.head')
-    <title>{{ $title ?? 'Community Connect' }}</title>
+    <title>{{ $title ?? 'Lcare' }}</title>
     <style>
         /* Force dark theme for auth pages */
         body {
@@ -331,8 +331,8 @@
     <div class="auth-container">
         <div class="auth-logo-section">
             <a href="{{ route('home') }}" class="auth-logo-link">
-                <div class="auth-logo-icon">CC</div>
-                <span class="auth-logo-text">Community Connect</span>
+                <div class="auth-logo-icon">LC</div>
+                <span class="auth-logo-text">Lcare</span>
             </a>
         </div>
 

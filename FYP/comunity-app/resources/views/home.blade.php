@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Community Connect - Home')
+@section('title', 'Lcare - Home')
 
 @section('content')
     <!-- Hero Section -->
@@ -141,21 +141,21 @@
 
             <div class="grid grid-3">
                 <div class="post-card">
-                    <div class="post-image" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
+                    <div class="post-image" style="background: linear-gradient(135deg, #FF512F 0%, #DD2476 100%);"></div>
                     <div class="post-content">
                         <div class="post-meta">
                             <span class="post-meta-item">📅 2 hours ago</span>
                             <span class="post-meta-item">💬 12 comments</span>
                         </div>
-                        <h3 class="post-title">Community Garden Initiative</h3>
+                        <h3 class="post-title">Traditional Wau Making Workshop</h3>
                         <p class="post-excerpt">
-                            Excited to announce our new community garden project! Join us this Saturday to help plant the
-                            first seeds.
+                            Join us this weekend to learn the art of making traditional Malaysian kites (Wau). All materials
+                            provided!
                         </p>
                         <div class="post-footer">
                             <div class="post-author">
                                 <div class="post-avatar"></div>
-                                <span class="post-author-name">Sarah Johnson</span>
+                                <span class="post-author-name">Ahmad Zaki</span>
                             </div>
                             <a href="{{ route('forum') }}" class="btn btn-ghost"
                                 style="padding: 0.5rem 1rem; font-size: 0.875rem;">Read More</a>
@@ -164,20 +164,21 @@
                 </div>
 
                 <div class="post-card">
-                    <div class="post-image" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);"></div>
+                    <div class="post-image" style="background: linear-gradient(135deg, #F09819 0%, #EDDE5D 100%);"></div>
                     <div class="post-content">
                         <div class="post-meta">
                             <span class="post-meta-item">📅 5 hours ago</span>
                             <span class="post-meta-item">💬 8 comments</span>
                         </div>
-                        <h3 class="post-title">Neighborhood Watch Update</h3>
+                        <h3 class="post-title">Malacca History Talk</h3>
                         <p class="post-excerpt">
-                            Monthly neighborhood watch meeting scheduled for next week. Important safety updates to discuss.
+                            A fascinating deep dive into the history of Malacca Sultanate. Don't miss this educational
+                            session.
                         </p>
                         <div class="post-footer">
                             <div class="post-author">
                                 <div class="post-avatar" style="background: var(--secondary-gradient);"></div>
-                                <span class="post-author-name">Mike Chen</span>
+                                <span class="post-author-name">Dr. Sarah</span>
                             </div>
                             <a href="{{ route('forum') }}" class="btn btn-ghost"
                                 style="padding: 0.5rem 1rem; font-size: 0.875rem;">Read More</a>
@@ -186,21 +187,20 @@
                 </div>
 
                 <div class="post-card">
-                    <div class="post-image" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);"></div>
+                    <div class="post-image" style="background: linear-gradient(135deg, #1fa2ff 0%, #12d8fa 100%);"></div>
                     <div class="post-content">
                         <div class="post-meta">
                             <span class="post-meta-item">📅 1 day ago</span>
                             <span class="post-meta-item">💬 15 comments</span>
                         </div>
-                        <h3 class="post-title">Summer Block Party Planning</h3>
+                        <h3 class="post-title">Preparation for Cultural Festival</h3>
                         <p class="post-excerpt">
-                            Let's make this year's block party the best one yet! Share your ideas and volunteer to help
-                            organize.
+                            We are looking for volunteers to help organize the upcoming Malaysian Cultural Food Festival.
                         </p>
                         <div class="post-footer">
                             <div class="post-author">
                                 <div class="post-avatar" style="background: var(--success-gradient);"></div>
-                                <span class="post-author-name">Emily Davis</span>
+                                <span class="post-author-name">Mei Ling</span>
                             </div>
                             <a href="{{ route('forum') }}" class="btn btn-ghost"
                                 style="padding: 0.5rem 1rem; font-size: 0.875rem;">Read More</a>
