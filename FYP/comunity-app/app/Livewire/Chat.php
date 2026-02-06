@@ -77,7 +77,7 @@ class Chat extends Component
     {
         $this->isGroupChat = true;
         $this->selectedUser = null;
-        $this->selectedGroup = Group::find($id);
+        $this->selectedGroup = Group::with('members.user')->find($id);
         $this->loadMessages();
     }
 

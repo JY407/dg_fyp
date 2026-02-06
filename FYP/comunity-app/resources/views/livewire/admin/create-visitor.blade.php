@@ -28,8 +28,8 @@ new #[Layout('layouts.admin')] class extends Component {
         $validated['user_id'] = auth()->id();
         $validated['pass_code'] = $this->generatePassCode();
         $validated['expected_arrival'] = now();
-        $validated['status'] = 'approved'; 
-        
+        $validated['status'] = 'approved';
+
         $visitor = Visitor::create($validated);
 
         $this->generatedPassCode = $visitor->pass_code;
@@ -41,7 +41,7 @@ new #[Layout('layouts.admin')] class extends Component {
         $this->ic_number = '';
         $this->vehicle_number = '';
         $this->visit_purpose = '';
-        
+
         // Refresh valid visitors list
         $this->dispatch('visitors-updated', $this->with()['visitors']);
     }
@@ -94,161 +94,137 @@ new #[Layout('layouts.admin')] class extends Component {
     }
 }; ?>
 
-<div class="dashboard-container">
+<div class="max-w-7xl mx-auto space-y-6">
     @push('styles')
         <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
             integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
         <style>
-            .management-grid {
-                display: grid;
-                grid-template-columns: 1fr 1.5fr;
-                gap: 2rem;
-                align-items: start;
+            .leaflet-pane {
+                z-index: 10;
             }
 
-            @media (max-width: 1024px) {
-                .management-grid {
-                    grid-template-columns: 1fr;
-                }
+            .leaflet-top,
+            .leaflet-bottom {
+                z-index: 20;
             }
 
-            #map {
-                height: 600px;
-                width: 100%;
-                border-radius: 0.75rem;
-                z-index: 1;
+            /* Custom Map Styling for Glassmorphism Context */
+            .leaflet-container {
+                font-family: var(--font-primary);
+                border-radius: var(--radius-lg);
             }
 
-            .form-card {
-                background: white;
-                padding: 2rem;
-                border-radius: 1rem;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            .leaflet-popup-content-wrapper {
+                background: rgba(255, 255, 255, 0.9);
+                backdrop-filter: blur(10px);
+                border-radius: var(--radius-md);
             }
 
-            .map-card {
-                background: white;
-                padding: 1rem;
-                border-radius: 1rem;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-                height: 100%;
-            }
-
-            .generated-pass {
-                background: #eff6ff;
-                border: 1px solid #bfdbfe;
-                padding: 1.5rem;
-                border-radius: 0.75rem;
-                margin-bottom: 2rem;
-                text-align: center;
-                animation: slideDown 0.3s ease-out;
-            }
-
-            @keyframes slideDown {
-                from { opacity: 0; transform: translateY(-10px); }
-                to { opacity: 1; transform: translateY(0); }
+            .leaflet-popup-tip {
+                background: rgba(255, 255, 255, 0.9);
             }
         </style>
     @endpush
 
-    <div class="page-header">
-        <h1 class="page-title">Visitor Management</h1>
-        <p class="page-subtitle">Register new visitors and monitor active guests in real-time.</p>
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+            <h1>Visitor Management</h1>
+            <p>Register new visitors and monitor active guests in real-time.</p>
+        </div>
+        <div>
+            <span class="badge badge-success" style="padding: 0.5rem 1rem; font-size: 0.9rem;">
+                <span class="d-inline-block rounded-full bg-white mr-2"
+                    style="width: 8px; height: 8px; animation: pulse 2s infinite;"></span>
+                <span wire:poll.5s>{{ count($visitors) }} Active Visitors</span>
+            </span>
+        </div>
     </div>
 
-    <div class="management-grid">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         <!-- LEFT COLUMN: Registration Form -->
-        <div class="form-card">
-            <h2 class="card-title" style="margin-bottom: 1.5rem;">📝 Register New Visitor</h2>
-
-            @if (session('success'))
-                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); color: #059669; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1.5rem;">
-                    ✅ {{ session('success') }}
-                </div>
-            @endif
-
-            @if ($generatedPassUrl)
-                <div class="generated-pass">
-                    <h3 style="color: #1e40af; font-weight: 600; margin-bottom: 0.5rem;">Visitor Pass Generated</h3>
-                    <p style="color: #60a5fa; margin-bottom: 1rem;">Share this link to verify location:</p>
-                    
-                    <div style="display: flex; gap: 0.5rem; justify-content: center; align-items: center;">
-                        <input type="text" readonly value="{{ $generatedPassUrl }}" 
-                            style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem; background: white;"
-                            id="passUrlInput">
-                        <button onclick="copyUrl()" 
-                            style="background: #2563eb; color: white; padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem; cursor: pointer; font-weight: 500;">
-                            Copy
-                        </button>
+        <div class="lg:col-span-4">
+            <div class="glass-card">
+                <div class="mb-4 flex items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center"
+                        style="width: 40px; height: 40px; background: rgba(255,255,255,0.1); border-radius: 50%;">
+                        📝
                     </div>
-                </div>
-            @endif
-
-            <form wire:submit="register" style="display: flex; flex-direction: column; gap: 1.5rem;">
-                <div class="form-group">
-                    <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">
-                        Visitor Name <span style="color: #ef4444;">*</span>
-                    </label>
-                    <input wire:model="name" type="text" required
-                        style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;"
-                        placeholder="John Doe">
-                    @error('name') <span style="color: #ef4444; font-size: 0.875rem;">{{ $message }}</span> @enderror
+                    <h2 style="margin: 0; font-size: 1.5rem;">Register Visitor</h2>
                 </div>
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                @if (session('success'))
+                    <div class="glass-card glass-card-sm mb-4"
+                        style="background: rgba(0, 242, 254, 0.1); border-color: var(--success-color);">
+                        <div class="flex items-center gap-2 text-success" style="color: #00f2fe;">
+                            ✅ <span class="font-bold">{{ session('success') }}</span>
+                        </div>
+                    </div>
+                @endif
+
+                @if ($generatedPassUrl)
+                    <div class="glass-card glass-card-sm mb-4 animate-fade-in"
+                        style="background: rgba(102, 126, 234, 0.1);">
+                        <h4 class="text-center mb-2" style="color: var(--primary-color);">Visitor Pass Generated</h4>
+                        <p class="text-center text-sm mb-3">Share this link to verify location</p>
+
+                        <div class="flex gap-2">
+                            <input type="text" readonly value="{{ $generatedPassUrl }}" class="form-input text-sm"
+                                id="passUrlInput">
+                            <button onclick="copyUrl()" class="btn btn-primary" style="padding: 0.5rem 1rem;">
+                                Copy
+                            </button>
+                        </div>
+                    </div>
+                @endif
+
+                <form wire:submit="register">
                     <div class="form-group">
-                        <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">
-                            IC Number
-                        </label>
-                        <input wire:model="ic_number" type="text"
-                            style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;"
-                            placeholder="Optional">
+                        <label class="form-label">Visitor Name <span
+                                style="color: var(--accent-color);">*</span></label>
+                        <input wire:model="name" type="text" required class="form-input" placeholder="e.g. John Doe">
+                        @error('name') <span class="text-accent text-sm mt-1 d-block"
+                        style="color: var(--accent-color);">{{ $message }}</span> @enderror
                     </div>
+
+                    <div class="grid grid-2 gap-4 mb-3">
+                        <div class="form-group mb-0">
+                            <label class="form-label">IC Number</label>
+                            <input wire:model="ic_number" type="text" class="form-input" placeholder="Optional">
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="form-label">Vehicle No.</label>
+                            <input wire:model="vehicle_number" type="text" class="form-input" placeholder="Optional">
+                        </div>
+                    </div>
+
                     <div class="form-group">
-                        <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">
-                            Vehicle No.
-                        </label>
-                        <input wire:model="vehicle_number" type="text"
-                            style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;"
-                            placeholder="Optional">
+                        <label class="form-label">Visit Purpose <span
+                                style="color: var(--accent-color);">*</span></label>
+                        <input wire:model="visit_purpose" type="text" required class="form-input"
+                            placeholder="e.g. Delivery, Contractor">
+                        @error('visit_purpose') <span class="text-accent text-sm mt-1 d-block"
+                        style="color: var(--accent-color);">{{ $message }}</span> @enderror
                     </div>
-                </div>
 
-                <div class="form-group">
-                    <label style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 0.5rem;">
-                        Visit Purpose <span style="color: #ef4444;">*</span>
-                    </label>
-                    <input wire:model="visit_purpose" type="text" required
-                        style="width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.5rem;"
-                        placeholder="Reference (e.g. Delivery)">
-                    @error('visit_purpose') <span style="color: #ef4444; font-size: 0.875rem;">{{ $message }}</span> @enderror
-                </div>
-
-                <button type="submit" wire:loading.attr="disabled"
-                    style="background: black; color: white; padding: 1rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; margin-top: 1rem; width: 100%;">
-                    <span wire:loading.remove>Generate Pass & Track</span>
-                    <span wire:loading>Processing...</span>
-                </button>
-            </form>
+                    <button type="submit" wire:loading.attr="disabled" class="btn btn-primary w-full mt-2"
+                        style="width: 100%;">
+                        <span wire:loading.remove>Generate Pass & Track</span>
+                        <span wire:loading>Processing...</span>
+                    </button>
+                </form>
+            </div>
         </div>
 
         <!-- RIGHT COLUMN: Map Monitoring -->
-        <div class="map-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 class="card-title">📍 Live User Tracking</h2>
-                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span class="badge badge-primary" wire:poll.5s>
-                        {{ count($visitors) }} Active
-                    </span>
-                </div>
+        <div class="lg:col-span-8">
+            <div class="glass-card p-1" style="height: 600px;">
+                <div id="map" wire:ignore style="height: 100%; width: 100%; border-radius: var(--radius-lg);"></div>
             </div>
-            
-            <div id="map" wire:ignore></div>
         </div>
     </div>
-    
+
     {{-- Polling to refresh data --}}
-    <div wire:poll.5s>
+    <div wire:poll.5s class="d-none">
         @php
             $this->dispatch('visitors-updated', $visitors);
         @endphp
@@ -278,7 +254,7 @@ new #[Layout('layouts.admin')] class extends Component {
                 const updateMarkers = (visitors) => {
                     console.log('Updating markers:', visitors);
                     const visitorIds = visitors.map(v => v.id);
-                    
+
                     // Cleanup old markers
                     for (const id in markers) {
                         if (!visitorIds.includes(parseInt(id))) {
@@ -290,20 +266,30 @@ new #[Layout('layouts.admin')] class extends Component {
                     // Add/Update markers
                     visitors.forEach(visitor => {
                         if (visitor.lat && visitor.lng) {
-                            let popupContent = `<b>${visitor.name}</b><br>`;
-                            
+                            // Custom Popup Styling
+                            let popupContent = `
+                                    <div style="font-family: 'Inter', sans-serif; color: #333;">
+                                        <div style="font-weight: 700; font-size: 1rem; margin-bottom: 4px;">${visitor.name}</div>
+                                `;
+
                             if (visitor.is_checked_in) {
-                                popupContent += `<span style="color: green; font-weight: bold;">✔ Verified</span><br>`;
+                                popupContent += `
+                                        <div style="color: #059669; font-weight: 600; font-size: 0.85rem; margin-bottom: 4px;">
+                                            ✔ Verified
+                                        </div>
+                                    `;
                                 if (visitor.address) {
-                                    popupContent += `<small>${visitor.address}</small><br>`;
+                                    popupContent += `<div style="color: #666; font-size: 0.75rem; margin-bottom: 4px;">${visitor.address}</div>`;
                                 }
                             } else {
-                                popupContent += `<button onclick="checkInVisitor(${visitor.id})" 
-                                    style="margin-top:5px; background:blue; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">
-                                    Verify Location
-                                </button><br>`;
+                                popupContent += `
+                                        <button onclick="checkInVisitor(${visitor.id})" 
+                                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; font-weight: 600; width: 100%; margin-top: 4px;">
+                                            Verify Location
+                                        </button>
+                                    `;
                             }
-                            popupContent += `<small style="color:gray;">Updated: ${visitor.last_update}</small>`;
+                            popupContent += `<div style="color: #999; font-size: 0.7rem; margin-top: 6px; border-top: 1px solid #eee; padding-top: 4px;">Updated: ${visitor.last_update}</div></div>`;
 
                             if (markers[visitor.id]) {
                                 markers[visitor.id].setLatLng([visitor.lat, visitor.lng]);
@@ -311,7 +297,7 @@ new #[Layout('layouts.admin')] class extends Component {
                             } else {
                                 markers[visitor.id] = L.marker([visitor.lat, visitor.lng])
                                     .addTo(map)
-                                    .bindPopup(popupContent);
+                                    .bindPopup(popupContent, { minWidth: 200 });
                             }
                         }
                     });

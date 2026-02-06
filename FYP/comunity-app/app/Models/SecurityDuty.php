@@ -15,6 +15,7 @@ class SecurityDuty extends Model
         'guard_name',
         'location',
         'status',
+        'contact_number',
         'notes',
     ];
 }

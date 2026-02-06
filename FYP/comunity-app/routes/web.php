@@ -45,6 +45,9 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNotAdmin::class])->group(f
 
     // Emergency Page
     Route::view('emergency', 'emergency')->name('emergency');
+
+    // Community Services
+    Volt::route('services', 'services')->name('services');
 });
 
 Route::middleware(['auth', \App\Http\Middleware\IsAdmin::class])->prefix('admin')->name('admin.')->group(function () {
@@ -52,6 +55,7 @@ Route::middleware(['auth', \App\Http\Middleware\IsAdmin::class])->prefix('admin'
     Volt::route('visitors/create', 'admin.create-visitor')->name('visitors.create');
     Volt::route('verifications', 'admin.user-verification')->name('verifications');
     Volt::route('duty-roster', 'admin.security-duties')->name('security-duties');
+    Volt::route('services', 'admin.services-management')->name('services-management');
 });
 
 // Public Visitor Pass (No Auth Required) - For Real-time Tracking

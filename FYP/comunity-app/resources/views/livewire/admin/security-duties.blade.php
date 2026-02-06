@@ -7,6 +7,7 @@ use Livewire\Attributes\Layout;
 new #[Layout('layouts.admin')] class extends Component {
     public $date;
     public $guard_name;
+    public $contact_number; // Added
     public $shift = 'Morning';
     public $location;
 
@@ -24,6 +25,7 @@ new #[Layout('layouts.admin')] class extends Component {
         $this->validate([
             'date' => 'required|date',
             'guard_name' => 'required|string|max:255',
+            'contact_number' => 'nullable|string|max:20', // Validation
             'shift' => 'required|string',
             'location' => 'required|string|max:255',
         ]);
@@ -31,11 +33,12 @@ new #[Layout('layouts.admin')] class extends Component {
         SecurityDuty::create([
             'date' => $this->date,
             'guard_name' => $this->guard_name,
+            'contact_number' => $this->contact_number, // Create
             'shift' => $this->shift,
             'location' => $this->location,
         ]);
 
-        $this->reset(['date', 'guard_name', 'shift', 'location']);
+        $this->reset(['date', 'guard_name', 'contact_number', 'shift', 'location']); // Reset
         $this->dispatch('duty-added');
     }
 
@@ -69,6 +72,12 @@ new #[Layout('layouts.admin')] class extends Component {
                         <input wire:model="guard_name" type="text" placeholder="Officer Name"
                             class="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
                         @error('guard_name') <span class="text-red-400 text-xs">{{ $message }}</span> @enderror
+                    </div>
+                    <div>
+                        <label class="block text-gray-400 text-sm mb-1">Contact Number</label>
+                        <input wire:model="contact_number" type="text" placeholder="e.g. 012-3456789"
+                            class="w-full bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-lg px-3 py-2 text-white focus:outline-none focus:border-indigo-500">
+                        @error('contact_number') <span class="text-red-400 text-xs">{{ $message }}</span> @enderror
                     </div>
                     <div>
                         <label class="block text-gray-400 text-sm mb-1">Shift</label>
@@ -118,6 +127,13 @@ new #[Layout('layouts.admin')] class extends Component {
                                     </span>
                                     <span>•</span>
                                     <span>{{ $duty->location }}</span>
+                                    @if($duty->contact_number)
+                                        <span>•</span>
+                                        <span class="text-indigo-400 flex items-center gap-1">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                            {{ $duty->contact_number }}
+                                        </span>
+                                    @endif
                                 </div>
                             </div>
                         </div>
