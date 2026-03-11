@@ -78,4 +78,43 @@ class User extends Authenticatable
     {
         return $this->hasMany(Visitor::class);
     }
+
+    /**
+     * Get the events created by the user.
+     */
+    public function events()
+    {
+        return $this->hasMany(Event::class);
+    }
+
+    /**
+     * Get the events the user has joined.
+     */
+    public function joinedEvents()
+    {
+        return $this->belongsToMany(Event::class);
+    }
+    /**
+     * Get the forum posts created by the user.
+     */
+    public function forumPosts()
+    {
+        return $this->hasMany(ForumPost::class);
+    }
+
+    /**
+     * Get the forum likes by the user.
+     */
+    public function forumLikes()
+    {
+        return $this->hasMany(ForumLike::class);
+    }
+
+    /**
+     * Get the forum comments by the user.
+     */
+    public function forumComments()
+    {
+        return $this->hasMany(ForumComment::class);
+    }
 }

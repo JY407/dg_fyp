@@ -133,8 +133,8 @@
                     <div class="p-4 border-t border-[rgba(255,255,255,0.1)] bg-[rgba(0,0,0,0.2)]">
                         <form wire:submit="submit" class="flex items-center gap-3">
                             <input wire:model.live="newMessage" type="text"
-                                class="flex-1 bg-[rgba(255,255,255,0.05)] border border-[rgba(255,255,255,0.1)] rounded-full px-6 py-3 text-white placeholder-gray-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
-                                placeholder="Type your message..." style="backdrop-filter: blur(5px);" 
+                                class="form-input !rounded-full flex-1"
+                                placeholder="Type your message..."
                                 {{ (!$selectedUser && !$selectedGroup) ? 'disabled' : '' }} />
 
                             <button type="submit"

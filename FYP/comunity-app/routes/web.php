@@ -11,8 +11,8 @@ use App\Livewire\Chat;
 Route::view('/', 'home')->name('home');
 Route::view('/announcements', 'announcements')->name('announcements');
 Route::view('/events', 'events')->name('events');
-Route::view('/forum', 'forum')->name('forum');
-Route::view('/contact', 'contact')->name('contact');
+Volt::route('/forum', 'forum')->name('forum');
+Volt::route('/contact', 'contact')->name('contact');
 
 // Dashboard - Requires Authentication
 Route::view('dashboard', 'dashboard')
@@ -46,9 +46,10 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNotAdmin::class])->group(f
     // Emergency Page
     Route::view('emergency', 'emergency')->name('emergency');
 
-    // Community Services
+    // Community Services and Events
     Volt::route('services', 'services')->name('services');
     Volt::route('culture', 'culture')->name('culture');
+    Volt::route('events', 'events')->name('events');
 });
 
 Route::middleware(['auth', \App\Http\Middleware\IsAdmin::class])->prefix('admin')->name('admin.')->group(function () {
@@ -58,6 +59,8 @@ Route::middleware(['auth', \App\Http\Middleware\IsAdmin::class])->prefix('admin'
     Volt::route('duty-roster', 'admin.security-duties')->name('security-duties');
     Volt::route('services', 'admin.services-management')->name('services-management');
     Volt::route('culture', 'admin.culture-management')->name('culture-management');
+    Volt::route('events', 'admin.events-management')->name('events-management');
+    Volt::route('contact-messages', 'admin.contact-messages')->name('contact-messages');
 });
 
 // Public Visitor Pass (No Auth Required) - For Real-time Tracking
