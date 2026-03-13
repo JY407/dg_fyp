@@ -50,6 +50,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNotAdmin::class])->group(f
     Volt::route('services', 'services')->name('services');
     Volt::route('culture', 'culture')->name('culture');
     Volt::route('events', 'events')->name('events');
+    Volt::route('facilities', 'facilities-booking')->name('facilities');
 });
 
 Route::middleware(['auth', \App\Http\Middleware\IsAdmin::class])->prefix('admin')->name('admin.')->group(function () {
@@ -61,6 +62,7 @@ Route::middleware(['auth', \App\Http\Middleware\IsAdmin::class])->prefix('admin'
     Volt::route('culture', 'admin.culture-management')->name('culture-management');
     Volt::route('events', 'admin.events-management')->name('events-management');
     Volt::route('contact-messages', 'admin.contact-messages')->name('contact-messages');
+    Volt::route('facilities', 'admin.facilities-management')->name('facilities');
 });
 
 // Public Visitor Pass (No Auth Required) - For Real-time Tracking

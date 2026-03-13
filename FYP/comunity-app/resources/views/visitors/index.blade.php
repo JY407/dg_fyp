@@ -3,7 +3,7 @@
 @section('title', 'Visitor Management')
 
 @section('content')
-    <div class="visitor-index">
+    <div class="visitor-index" style="padding-bottom: 3rem;">
         <div class="page-header"
             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
             <div>

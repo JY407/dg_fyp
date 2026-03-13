@@ -118,6 +118,21 @@
             </a>
         </li>
         <li>
+            <a href="{{ route('facilities') }}" class="sidebar-link {{ request()->routeIs('facilities') ? 'active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 21h18"></path>
+                    <path d="M5 21V7l8-4 8 4v14"></path>
+                    <path d="M9 21v-4a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v4"></path>
+                    <rect x="7" y="9" width="2" height="2"></rect>
+                    <rect x="15" y="9" width="2" height="2"></rect>
+                    <rect x="7" y="13" width="2" height="2"></rect>
+                    <rect x="15" y="13" width="2" height="2"></rect>
+                </svg>
+                <span>Facilities</span>
+            </a>
+        </li>
+        <li>
             <a href="{{ route('emergency') }}"
                 class="sidebar-link {{ request()->routeIs('emergency') ? 'active' : '' }}" style="color: #ef4444;">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"

@@ -150,7 +150,7 @@ new #[Layout('layouts.app')] class extends Component {
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
             <!-- Feed -->
-            <div class="lg:col-span-8 space-y-8">
+            <div class="lg:col-span-8 flex flex-col gap-8">
 
                 <!-- Create Post Card -->
                 @auth

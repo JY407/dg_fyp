@@ -22,16 +22,17 @@ new class extends Component {
     }
 }; ?>
 
-<section class="glass-card-lg">
+<section>
     <div class="mb-5">
-        <h3 class="text-xl font-bold text-primary mb-2">{{ __('Delete Account') }}</h3>
-        <p class="text-secondary">
+        <h3 class="text-xl font-bold text-red-400 mb-2">{{ __('Delete Account') }}</h3>
+        <p class="text-gray-400">
             {{ __('Delete your account and all of its resources. This action cannot be undone.') }}</p>
     </div>
 
     <flux:modal.trigger name="confirm-user-deletion">
-        <button class="btn btn-outline" style="border-color: #f5576c; color: #f5576c;" x-data
+        <button class="bg-red-500/20 hover:bg-red-500/30 text-red-500 font-bold py-3 px-6 rounded-[24px] border border-red-500/30 transition-all duration-300 flex items-center justify-center gap-2 min-w-[200px]" x-data
             x-on:click.prevent="$dispatch('open-modal', 'confirm-user-deletion')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
             {{ __('Delete Account') }}
         </button>
     </flux:modal.trigger>

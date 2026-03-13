@@ -117,4 +117,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(ForumComment::class);
     }
+
+    /**
+     * Get the facility bookings by the user.
+     */
+    public function facilityBookings()
+    {
+        return $this->hasMany(FacilityBooking::class);
+    }
 }
