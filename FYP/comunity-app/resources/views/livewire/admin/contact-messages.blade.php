@@ -3,129 +3,193 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use App\Models\ContactMessage;
+use Livewire\WithPagination;
 
 new #[Layout('layouts.admin')] class extends Component {
+    use WithPagination;
+
+    public $filterTab = 'all'; // all, unread
+
     public function with()
     {
+        $query = ContactMessage::latest();
+        if ($this->filterTab === 'unread') {
+            $query->where('is_read', false);
+        }
         return [
-            'messages' => ContactMessage::latest()->get()
+            'messages'   => $query->paginate(10),
+            'unreadCount' => ContactMessage::where('is_read', false)->count(),
         ];
+    }
+
+    public function setFilter($tab)
+    {
+        $this->filterTab = $tab;
+        $this->resetPage();
     }
 
     public function markAsRead($id)
     {
-        $message = ContactMessage::find($id);
-        if ($message) {
-            $message->update(['is_read' => true]);
-        }
+        ContactMessage::findOrFail($id)->update(['is_read' => true]);
     }
 
     public function markAsUnread($id)
     {
-        $message = ContactMessage::find($id);
-        if ($message) {
-            $message->update(['is_read' => false]);
-        }
+        ContactMessage::findOrFail($id)->update(['is_read' => false]);
     }
 
     public function deleteMessage($id)
     {
-        $message = ContactMessage::find($id);
-        if ($message) {
-            $message->delete();
-        }
+        ContactMessage::findOrFail($id)->delete();
+        session()->flash('success', 'Message deleted.');
     }
 }; ?>
 
 <div class="p-6">
-    <div class="mb-8 flex justify-between items-center bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+    <div class="mb-8 flex justify-between items-end">
         <div>
-            <h1 class="text-2xl font-bold text-gray-800">Contact Messages</h1>
-            <p class="text-gray-500 text-sm mt-1">Manage inquiries and feedback from the community.</p>
+            <h1 class="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                Contact Messages
+                @if($unreadCount > 0)
+                    <span class="bg-indigo-600 text-white text-sm font-bold px-3 py-0.5 rounded-full">{{ $unreadCount }} Unread</span>
+                @endif
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Manage inquiries and feedback from the community.</p>
         </div>
-        <div class="flex gap-4">
-            <div class="bg-indigo-50 px-4 py-2 rounded-xl text-center border border-indigo-100">
-                <span class="block text-2xl font-bold text-indigo-600">{{ $messages->where('is_read', false)->count() }}</span>
-                <span class="text-xs text-indigo-600 font-medium uppercase tracking-wider text-nowrap">Unread</span>
-            </div>
-            <div class="bg-gray-50 px-4 py-2 rounded-xl text-center border border-gray-100">
-                <span class="block text-2xl font-bold text-gray-600">{{ $messages->count() }}</span>
-                <span class="text-xs text-gray-500 font-medium uppercase tracking-wider text-nowrap">Total</span>
-            </div>
+        <div class="flex gap-2 bg-gray-100 dark:bg-gray-800 p-1 rounded-xl">
+            <button wire:click="setFilter('all')" class="px-5 py-2 rounded-lg text-sm font-medium transition-colors {{ $filterTab === 'all' ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white' }}">
+                All
+            </button>
+            <button wire:click="setFilter('unread')" class="px-5 py-2 rounded-lg text-sm font-medium transition-colors {{ $filterTab === 'unread' ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow' : 'text-gray-500 hover:text-gray-900 dark:hover:text-white' }}">
+                Unread
+                @if($unreadCount > 0)
+                    <span class="ml-1.5 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{{ $unreadCount }}</span>
+                @endif
+            </button>
         </div>
     </div>
 
-    <!-- Messages List -->
-    <div class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        @if($messages->isEmpty())
-            <div class="p-12 text-center text-gray-500">
-                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-gray-300 mb-4"><path d="M21.2 8.4c.5.38.8.97.8 1.6v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V10a2 2 0 0 1 .8-1.6l8-6a2 2 0 0 1 2.4 0l8 6Z"/><path d="m22 10-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 10"/></svg>
-                <h3 class="text-lg font-medium text-gray-900 mb-1">No Messages Yet</h3>
-                <p>When users send a message through the Contact Us page, it will appear here.</p>
-            </div>
-        @else
-            <ul class="divide-y divide-gray-100">
-                @foreach($messages as $msg)
-                    <li class="p-6 transition hover:bg-gray-50 {{ $msg->is_read ? '' : 'bg-indigo-50/30' }}">
-                        <div class="flex items-start justify-between gap-6">
-                            
-                            <!-- Sender Info -->
-                            <div class="flex gap-4 shrink-0 w-64 border-r border-gray-100">
-                                @if($msg->user && $msg->user->profile_photo_path)
-                                    <img src="{{ asset('storage/' . $msg->user->profile_photo_path) }}" class="w-10 h-10 rounded-full object-cover shrink-0">
-                                @else
-                                    <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0">
-                                        {{ str($msg->name)->substr(0, 1)->upper() }}
-                                    </div>
-                                @endif
-                                <div>
-                                    <p class="font-bold text-gray-900 truncate max-w-[150px]">{{ $msg->name }}</p>
-                                    <p class="text-xs text-gray-500 truncate mt-0.5 max-w-[150px]">{{ $msg->email }}</p>
-                                    <div class="mt-2 text-[10px] font-medium px-2 py-0.5 rounded-full inline-block {{ $msg->user_id ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600' }}">
-                                        {{ $msg->user_id ? 'Registered User' : 'Guest' }}
+    @if (session()->has('success'))
+        <div class="mb-6 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded-xl flex items-center gap-3">
+            <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+                        <th class="px-8 py-5 font-bold uppercase tracking-wider text-xs">Sender</th>
+                        <th class="px-8 py-5 font-bold uppercase tracking-wider text-xs">Subject & Message</th>
+                        <th class="px-8 py-5 font-bold uppercase tracking-wider text-xs">Received</th>
+                        <th class="px-8 py-5 font-bold uppercase tracking-wider text-xs">Status</th>
+                        <th class="px-8 py-5 font-bold uppercase tracking-wider text-xs text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                    @forelse ($messages as $msg)
+                        <tr class="hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition-colors group {{ !$msg->is_read ? 'bg-indigo-50/30 dark:bg-indigo-900/10' : '' }}">
+                            <td class="px-8 py-5">
+                                <div class="flex items-center gap-3">
+                                    @if($msg->user && $msg->user->profile_photo_path)
+                                        <img src="{{ asset('storage/' . $msg->user->profile_photo_path) }}" class="w-9 h-9 rounded-full object-cover shrink-0">
+                                    @else
+                                        <div class="w-9 h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/50 text-indigo-700 dark:text-indigo-400 font-bold flex items-center justify-center shrink-0 text-sm">
+                                            {{ strtoupper(substr($msg->name, 0, 1)) }}
+                                        </div>
+                                    @endif
+                                    <div>
+                                        <div class="font-bold text-gray-900 dark:text-white {{ !$msg->is_read ? 'text-indigo-800 dark:text-indigo-300' : '' }}">{{ $msg->name }}</div>
+                                        <div class="text-xs text-gray-400 mt-0.5">{{ $msg->email }}</div>
+                                        <span class="mt-1 inline-block text-[10px] font-medium px-2 py-0.5 rounded-full {{ $msg->user_id ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400' }}">
+                                            {{ $msg->user_id ? 'Registered' : 'Guest' }}
+                                        </span>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Message Content -->
-                            <div class="flex-1 min-w-0">
-                                <div class="flex justify-between items-baseline mb-1">
-                                    <h4 class="text-base font-bold text-gray-900 flex items-center gap-2">
-                                        @if(!$msg->is_read)
-                                            <span class="w-2.5 h-2.5 bg-indigo-600 rounded-full inline-block" title="Unread"></span>
-                                        @endif
-                                        {{ $msg->subject }}
-                                    </h4>
-                                    <span class="text-xs text-gray-400 {{ !$msg->is_read ? 'font-semibold text-indigo-600' : '' }} whitespace-nowrap ml-4">
-                                        {{ $msg->created_at->format('M d, Y h:i A') }}
+                            </td>
+                            <td class="px-8 py-5 max-w-md">
+                                <div class="font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+                                    @if(!$msg->is_read)
+                                        <span class="w-2 h-2 bg-indigo-600 rounded-full shrink-0"></span>
+                                    @endif
+                                    {{ $msg->subject }}
+                                </div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400 whitespace-pre-wrap line-clamp-2">{{ $msg->message }}</div>
+                            </td>
+                            <td class="px-8 py-5 text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                                {{ $msg->created_at->format('M d, Y') }}<br>
+                                <span class="text-xs text-gray-400">{{ $msg->created_at->format('h:i A') }}</span>
+                            </td>
+                            <td class="px-8 py-5">
+                                @if (!$msg->is_read)
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
+                                        <span class="w-1.5 h-1.5 bg-indigo-600 rounded-full animate-pulse"></span>
+                                        Unread
                                     </span>
-                                </div>
-                                <div class="text-sm text-gray-600 whitespace-pre-wrap mt-2 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                    {{ $msg->message }}
-                                </div>
-                            </div>
-
-                            <!-- Actions -->
-                            <div class="flex flex-col gap-2 shrink-0">
-                                @if(!$msg->is_read)
-                                    <button wire:click="markAsRead({{ $msg->id }})" class="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition tooltip shrink-0" title="Mark as Read">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.801 10A10 10 0 1 1 17 3.335"/><path d="m9 11 3 3L22 4"/></svg>
-                                    </button>
                                 @else
-                                    <button wire:click="markAsUnread({{ $msg->id }})" class="p-2 text-gray-400 bg-gray-50 hover:bg-gray-100 rounded-lg transition tooltip shrink-0" title="Mark as Unread">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                                    </button>
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                                        Read
+                                    </span>
                                 @endif
-                                
-                                <button wire:click="deleteMessage({{ $msg->id }})" wire:confirm="Are you sure you want to delete this message?" class="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition tooltip shrink-0" title="Delete">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
-                                </button>
-                            </div>
-
-                        </div>
-                    </li>
-                @endforeach
-            </ul>
+                            </td>
+                            <td class="px-8 py-5 text-right">
+                                <div class="flex items-center justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                                    @if (!$msg->is_read)
+                                        <button wire:click="markAsRead({{ $msg->id }})"
+                                            class="text-indigo-600 dark:text-indigo-400 hover:text-white hover:bg-indigo-600 bg-indigo-50 dark:bg-indigo-900/30 p-2.5 rounded-lg transition-all border border-indigo-100 dark:border-indigo-800 hover:border-transparent"
+                                            title="Mark as Read">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </button>
+                                    @else
+                                        <button wire:click="markAsUnread({{ $msg->id }})"
+                                            class="text-gray-400 hover:text-white hover:bg-gray-500 bg-gray-100 dark:bg-gray-700 p-2.5 rounded-lg transition-all border border-gray-200 dark:border-gray-600 hover:border-transparent"
+                                            title="Mark as Unread">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                            </svg>
+                                        </button>
+                                    @endif
+                                    <button wire:click="deleteMessage({{ $msg->id }})"
+                                        wire:confirm="Delete this message?"
+                                        class="text-red-500 hover:text-white bg-red-50 hover:bg-red-500 dark:bg-red-900/30 dark:hover:bg-red-600 p-2.5 rounded-lg transition-all border border-red-100 dark:border-red-800 hover:border-transparent"
+                                        title="Delete">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-8 py-16 text-center text-gray-500 dark:text-gray-400">
+                                <div class="flex flex-col items-center">
+                                    <div class="w-16 h-16 bg-white dark:bg-gray-700 rounded-full flex items-center justify-center mb-4 shadow-sm border border-gray-100 dark:border-gray-600">
+                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-200 mb-1">
+                                        {{ $filterTab === 'unread' ? 'No unread messages' : 'No messages yet' }}
+                                    </h3>
+                                    <p class="text-sm text-gray-500">Messages from the Contact page will appear here.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if ($messages->hasPages())
+            <div class="px-8 py-4 border-t border-gray-100 dark:border-gray-700">
+                {{ $messages->links() }}
+            </div>
         @endif
     </div>
 </div>

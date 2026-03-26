@@ -30,6 +30,7 @@ class User extends Authenticatable
         'status',
         'created_by',
         'profile_photo_path',
+        'notifications_read_at',
     ];
 
     public function familyMembers()

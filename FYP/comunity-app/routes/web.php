@@ -7,9 +7,17 @@ use Livewire\Volt\Volt;
 use App\Livewire\Home;
 use App\Livewire\Chat;
 
-// Community Pages - Public Routes
+// Language Switcher
+Route::get('/lang/{locale}', function (string $locale) {
+    $supported = ['en', 'ms', 'zh'];
+    if (in_array($locale, $supported)) {
+        session(['locale' => $locale]);
+    }
+    return redirect()->back();
+})->name('lang.switch');
+
+
 Route::view('/', 'home')->name('home');
-Route::view('/announcements', 'announcements')->name('announcements');
 Route::view('/events', 'events')->name('events');
 Volt::route('/forum', 'forum')->name('forum');
 Volt::route('/contact', 'contact')->name('contact');
@@ -47,6 +55,7 @@ Route::middleware(['auth', \App\Http\Middleware\EnsureNotAdmin::class])->group(f
     Route::view('emergency', 'emergency')->name('emergency');
 
     // Community Services and Events
+    Volt::route('announcements', 'announcements')->name('announcements');
     Volt::route('services', 'services')->name('services');
     Volt::route('culture', 'culture')->name('culture');
     Volt::route('events', 'events')->name('events');
@@ -63,6 +72,9 @@ Route::middleware(['auth', \App\Http\Middleware\IsAdmin::class])->prefix('admin'
     Volt::route('events', 'admin.events-management')->name('events-management');
     Volt::route('contact-messages', 'admin.contact-messages')->name('contact-messages');
     Volt::route('facilities', 'admin.facilities-management')->name('facilities');
+    Volt::route('announcements', 'admin.announcements-management')->name('announcements-management');
+    Volt::route('forum', 'admin.forum-management')->name('forum-management');
+    Volt::route('emergencies', 'admin.emergencies-management')->name('emergencies-management');
 });
 
 // Public Visitor Pass (No Auth Required) - For Real-time Tracking

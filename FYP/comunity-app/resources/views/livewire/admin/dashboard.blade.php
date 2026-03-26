@@ -3,198 +3,175 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Visitor;
+use App\Models\User;
+use App\Models\Announcement;
+use App\Models\EmergencyAlert;
+use App\Models\ForumPost;
 
 new #[Layout('layouts.admin')] class extends Component {
+
     public function resolveAlert($id)
     {
-        $alert = \App\Models\EmergencyAlert::find($id);
+        $alert = EmergencyAlert::find($id);
         if ($alert) {
             $alert->update(['status' => 'resolved']);
         }
+        session()->flash('success', 'Alert resolved.');
     }
 
     public function with()
     {
-        $stats = [
-            'total_users' => \App\Models\User::where('user_type', '!=', 'admin')->count(),
-            'total_announcements' => \App\Models\Announcement::count(),
-            'recent_activity' => Visitor::latest()->take(5)->get(),
-            'active_visitors' => Visitor::whereNotNull('latitude')->count(),
-        ];
-
         return [
-            'stats' => $stats,
-            'emergency_alerts' => \App\Models\EmergencyAlert::with('user')->where('status', 'pending')->latest()->get(),
+            'stats' => [
+                'total_users'         => User::where('user_type', '!=', 'admin')->count(),
+                'total_announcements' => Announcement::count(),
+                'total_forums'        => ForumPost::count(),
+                'active_visitors'     => Visitor::whereNotNull('latitude')->count(),
+            ],
+            'recent_visitors'    => Visitor::latest()->take(5)->get(),
+            'emergency_alerts'   => EmergencyAlert::with('user')->where('status', 'pending')->latest()->get(),
         ];
     }
 }; ?>
 
-<div class="dashboard-container">
-    @push('styles')
-        <style>
-            .stats-grid {
-                display: grid;
-                grid-template-columns: repeat(3, 1fr);
-                gap: 1.5rem;
-                margin-bottom: 2rem;
-            }
+<div>
+    @if (session()->has('success'))
+        <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl flex items-center gap-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            {{ session('success') }}
+        </div>
+    @endif
 
-            .stat-card {
-                background: white;
-                padding: 1.5rem;
-                border-radius: 1rem;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-                display: flex;
-                flex-direction: column;
-            }
-
-            .stat-title {
-                color: #6b7280;
-                font-size: 0.875rem;
-                font-weight: 500;
-                margin-bottom: 0.5rem;
-            }
-
-            .stat-value {
-                color: #111827;
-                font-size: 1.875rem;
-                font-weight: 700;
-            }
-
-            .activity-list {
-                list-style: none;
-                padding: 0;
-            }
-
-            .activity-item {
-                display: flex;
-                align-items: center;
-                padding: 0.75rem 0;
-                border-bottom: 1px solid #f3f4f6;
-            }
-
-            .activity-item:last-child {
-                border-bottom: none;
-            }
-
-            .activity-avatar {
-                width: 2.5rem;
-                height: 2.5rem;
-                border-radius: 50%;
-                background: #ebf5ff;
-                color: #3b82f6;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-weight: 600;
-                margin-right: 1rem;
-            }
-
-            .activity-content h4 {
-                font-size: 0.9rem;
-                font-weight: 600;
-                margin: 0;
-            }
-
-            .activity-content p {
-                font-size: 0.8rem;
-                color: #6b7280;
-                margin: 0;
-            }
-        </style>
-    @endpush
-
-    <div class="page-header">
-        <h1 class="page-title">Admin Dashboard</h1>
-        <p class="page-subtitle">Welcome back, {{ auth()->user()->name }}</p>
+    {{-- Page Header --}}
+    <div class="mb-8">
+        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard Overview</h1>
+        <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">Welcome back, <strong class="text-gray-700 dark:text-gray-200">{{ auth()->user()->name }}</strong>. Here's what's happening.</p>
     </div>
 
-    <!-- Emergency Alerts Section -->
+    {{-- Emergency Alerts Banner --}}
     @if($emergency_alerts->isNotEmpty())
-        <div class="alert-section"
-            style="background: #fee2e2; border: 1px solid #ef4444; border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem; animation: pulse 2s infinite;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 style="color: #b91c1c; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-                    ⚠️ EMERGENCY ALERTS ACTIVE ({{ $emergency_alerts->count() }})
-                </h2>
+        <div class="mb-8 rounded-2xl border border-red-200 bg-red-50 overflow-hidden">
+            <div class="px-6 py-4 bg-red-500 flex items-center justify-between">
+                <div class="flex items-center gap-3 text-white">
+                    <span class="w-3 h-3 rounded-full bg-white animate-pulse inline-block"></span>
+                    <span class="font-bold text-lg">EMERGENCY ALERTS ACTIVE ({{ $emergency_alerts->count() }})</span>
+                </div>
+                <a href="{{ route('admin.emergencies-management') }}" class="text-white/80 hover:text-white text-sm font-semibold underline">View All →</a>
             </div>
-
-            <div style="display: grid; gap: 1rem;">
+            <div class="p-5 space-y-3">
                 @foreach($emergency_alerts as $alert)
-                    <div
-                        style="background: white; padding: 1rem; border-radius: 8px; border-left: 4px solid #ef4444; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="flex items-center justify-between bg-white rounded-xl px-5 py-4 border border-red-100 shadow-sm">
                         <div>
-                            <h3 style="margin: 0 0 0.25rem 0; color: #1f2937;">
-                                {{ $alert->user->name }}
-                                <span
-                                    style="background: #fee2e2; color: #991b1b; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-left: 0.5rem;">
-                                    Unit: {{ $alert->user->unit_number ?? 'N/A' }} | Block: {{ $alert->user->block ?? 'N/A' }}
-                                </span>
-                            </h3>
-                            <p style="margin: 0; color: #6b7280; font-size: 0.9rem;">
-                                Time: {{ $alert->created_at->format('d M Y, h:i A') }}
-                                ({{ $alert->created_at->diffForHumans() }})
-                            </p>
+                            <div class="font-bold text-gray-900">{{ $alert->user->name }}
+                                <span class="ml-2 text-xs font-semibold px-2 py-0.5 rounded bg-red-100 text-red-700">Unit {{ $alert->user->unit_number ?? 'N/A' }}</span>
+                            </div>
+                            <div class="text-sm text-gray-500 mt-0.5">{{ $alert->created_at->diffForHumans() }} &bull; {{ $alert->created_at->format('d M Y, h:i A') }}</div>
                         </div>
-                        <button wire:click="resolveAlert({{ $alert->id }})"
-                            wire:confirm="Are you sure you want to resolve this alert?"
-                            style="background: #dc2626; color: white; border: none; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;">
+                        <button wire:click="resolveAlert({{ $alert->id }})" wire:confirm="Resolve this alert?"
+                            class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm font-semibold transition-colors">
                             Resolve
                         </button>
                     </div>
                 @endforeach
             </div>
         </div>
-        <style>
-            @keyframes pulse {
-                0% {
-                    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-                }
-
-                70% {
-                    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
-                }
-
-                100% {
-                    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-                }
-            }
-        </style>
     @endif
 
-    <!-- Stats Row -->
-    <div class="stats-grid">
-        <div class="stat-card">
-            <span class="stat-title">Total Users</span>
-            <span class="stat-value">{{ $stats['total_users'] }}</span>
+    {{-- Stat Cards --}}
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+        {{-- Total Users --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-700 p-6 flex items-center gap-5">
+            <div class="w-14 h-14 rounded-2xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center flex-shrink-0">
+                <svg class="w-7 h-7 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Users</p>
+                <p class="text-3xl font-bold text-gray-900 dark:text-white mt-0.5">{{ $stats['total_users'] }}</p>
+            </div>
         </div>
-        <div class="stat-card">
-            <span class="stat-title">Total Announcements</span>
-            <span class="stat-value">{{ $stats['total_announcements'] }}</span>
+
+        {{-- Announcements --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-700 p-6 flex items-center gap-5">
+            <div class="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-900/30 flex items-center justify-center flex-shrink-0">
+                <svg class="w-7 h-7 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Announcements</p>
+                <p class="text-3xl font-bold text-gray-900 dark:text-white mt-0.5">{{ $stats['total_announcements'] }}</p>
+            </div>
         </div>
-        <div class="stat-card">
-            <span class="stat-title">Active Visitors</span>
-            <span class="stat-value">{{ $stats['active_visitors'] }}</span>
+
+        {{-- Forum Posts --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-700 p-6 flex items-center gap-5">
+            <div class="w-14 h-14 rounded-2xl bg-sky-50 dark:bg-sky-900/30 flex items-center justify-center flex-shrink-0">
+                <svg class="w-7 h-7 text-sky-600 dark:text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Forum Posts</p>
+                <p class="text-3xl font-bold text-gray-900 dark:text-white mt-0.5">{{ $stats['total_forums'] }}</p>
+            </div>
+        </div>
+
+        {{-- Active Visitors --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-700 p-6 flex items-center gap-5">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/30 flex items-center justify-center flex-shrink-0">
+                <svg class="w-7 h-7 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            </div>
+            <div>
+                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Tracked Visitors</p>
+                <p class="text-3xl font-bold text-gray-900 dark:text-white mt-0.5">{{ $stats['active_visitors'] }}</p>
+            </div>
         </div>
     </div>
 
-    <!-- Recent Activity Section -->
-    <div class="card">
-        <h2 class="card-title" style="margin-bottom: 1rem;">Recent Activity</h2>
-        <ul class="activity-list">
-            @forelse($stats['recent_activity'] as $activity)
-                <li class="activity-item">
-                    <div class="activity-avatar">
-                        {{ substr($activity->name, 0, 1) }}
-                    </div>
-                    <div class="activity-content">
-                        <h4>{{ $activity->name }}</h4>
-                        <p>Checked in {{ $activity->created_at->diffForHumans() }}</p>
-                    </div>
-                </li>
-            @empty
-                <li style="color: #6b7280; text-align: center; padding: 1rem;">No recent activity</li>
-            @endforelse
-        </ul>
+    {{-- Bottom Grid: Recent Visitors + Quick Links --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {{-- Recent Visitor Activity --}}
+        <div class="lg:col-span-2 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center">
+                <h2 class="text-base font-bold text-gray-900 dark:text-white">Recent Visitor Activity</h2>
+                <a href="{{ route('admin.visitors.create') }}" class="text-indigo-500 hover:text-indigo-400 font-semibold text-sm">+ Record Visitor</a>
+            </div>
+            <ul class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                @forelse($recent_visitors as $visitor)
+                    <li class="px-6 py-4 flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center flex-shrink-0">
+                            {{ strtoupper(substr($visitor->name, 0, 1)) }}
+                        </div>
+                        <div>
+                            <p class="font-semibold text-gray-900 dark:text-white text-sm">{{ $visitor->name }}</p>
+                            <p class="text-xs text-gray-400 mt-0.5">Checked in {{ $visitor->created_at->diffForHumans() }}</p>
+                        </div>
+                    </li>
+                @empty
+                    <li class="px-6 py-12 text-center text-gray-400 text-sm">No recent visitor activity.</li>
+                @endforelse
+            </ul>
+        </div>
+
+        {{-- Quick Navigation --}}
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200/80 dark:border-gray-700 overflow-hidden">
+            <div class="px-6 py-5 border-b border-gray-100 dark:border-gray-700">
+                <h2 class="text-base font-bold text-gray-900 dark:text-white">Quick Navigation</h2>
+            </div>
+            <div class="p-4 grid grid-cols-1 gap-2">
+                @foreach([
+                    ['route' => 'admin.announcements-management', 'label' => 'Announcements'],
+                    ['route' => 'admin.forum-management', 'label' => 'Forum'],
+                    ['route' => 'admin.emergencies-management', 'label' => 'Emergencies'],
+                    ['route' => 'admin.facilities', 'label' => 'Facilities'],
+                    ['route' => 'admin.events-management', 'label' => 'Events'],
+                    ['route' => 'admin.contact-messages', 'label' => 'Messages'],
+                ] as $link)
+                    <a href="{{ route($link['route']) }}"
+                        class="flex items-center justify-between px-4 py-3 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700/50 border border-transparent hover:border-gray-200 dark:hover:border-gray-600 transition-all group">
+                        <span class="font-medium text-gray-600 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white text-sm">{{ $link['label'] }}</span>
+                        <svg class="w-4 h-4 text-gray-400 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </a>
+                @endforeach
+            </div>
+        </div>
     </div>
 </div>

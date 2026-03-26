@@ -175,10 +175,10 @@ new #[Layout('layouts.app')] class extends Component {
     <div class="max-w-[90rem] mx-auto sm:px-6 lg:px-8 relative z-10">
         <div class="text-center mb-16">
             <h1 class="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 to-indigo-500 mb-4 animate-fade-in-down">
-                Community Events
+                {{ __('app.events_title') }}
             </h1>
             <p class="text-gray-400 text-lg max-w-2xl mx-auto">
-                Discover and join upcoming events in our community.
+                {{ __('app.events_subtitle') }}
             </p>
             @auth
                 <div class="mt-8 flex justify-center">
@@ -333,8 +333,8 @@ new #[Layout('layouts.app')] class extends Component {
                                 <div class="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mb-4 border border-gray-700 shadow-inner">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                                 </div>
-                                <h3 class="font-bold text-gray-300 mb-2">No Upcoming Events</h3>
-                                <p class="text-sm text-gray-500 max-w-sm mb-4">There are currently no approved upcoming events in the community.</p>
+                                <h3 class="font-bold text-gray-300 mb-2">{{ __('app.events_none') }}</h3>
+                                <p class="text-sm text-gray-500 max-w-sm mb-4">{{ __('app.events_subtitle') }}</p>
                                 @auth
                                     <button wire:click="$toggle('showCreateModal')" class="text-indigo-400 hover:text-indigo-300 font-medium text-sm">
                                         Be the first to create one

@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use App\Models\User;
+use App\Models\UserNotification;
 use Livewire\Attributes\Layout;
 
 new #[Layout('layouts.admin')] class extends Component {
@@ -17,6 +18,14 @@ new #[Layout('layouts.admin')] class extends Component {
         $user = User::findOrFail($userId);
         $user->status = 'approved';
         $user->save();
+
+        UserNotification::create([
+            'user_id' => $user->id,
+            'type'    => 'account_approved',
+            'title'   => '✅ Registration Approved',
+            'message' => 'Welcome to Lcare Community! Your registration has been approved. You now have full access to the platform.',
+        ]);
+
         $this->dispatch('user-verified', message: 'User approved successfully.');
     }
 
@@ -25,6 +34,14 @@ new #[Layout('layouts.admin')] class extends Component {
         $user = User::findOrFail($userId);
         $user->status = 'rejected';
         $user->save();
+
+        UserNotification::create([
+            'user_id' => $user->id,
+            'type'    => 'account_rejected',
+            'title'   => '❌ Registration Not Approved',
+            'message' => 'Unfortunately, your registration request was not approved. Please contact management for more information.',
+        ]);
+
         $this->dispatch('user-verified', message: 'User rejected.');
     }
 }; ?>

@@ -2,187 +2,503 @@
 
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
-use App\Models\Event;
+use Livewire\WithFileUploads;
 use Livewire\WithPagination;
+use App\Models\Event;
+use Illuminate\Support\Facades\Storage;
+use Carbon\Carbon;
 
 new #[Layout('layouts.admin')] class extends Component {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
-    public $currentTab = 'pending'; // pending, all
+    // Listing state
+    public string $search = '';
+    public string $statusFilter = 'all';
 
-    public function with()
+    // Modal state
+    public bool $showModal = false;
+    public bool $showDeleteModal = false;
+    public ?int $editingId = null;
+    public ?int $deletingId = null;
+
+    // Form fields
+    public string $title = '';
+    public string $description = '';
+    public string $event_date = '';
+    public string $start_time = '';
+    public string $end_time = '';
+    public string $location = '';
+    public string $status = 'approved';
+    public $image;
+    public ?string $existingImage = null;
+
+    public function with(): array
     {
-        $query = Event::with(['creator', 'participants'])->orderBy('created_at', 'desc');
-        
-        if ($this->currentTab === 'pending') {
-            $query->where('status', 'pending');
-        }
+        $query = Event::with('creator')
+            ->when($this->search, fn($q) =>
+                $q->where('title', 'like', '%'.$this->search.'%')
+                  ->orWhere('location', 'like', '%'.$this->search.'%')
+            )
+            ->when($this->statusFilter !== 'all', fn($q) =>
+                $q->where('status', $this->statusFilter)
+            )
+            ->orderBy('event_date', 'desc');
 
         return [
-            'events' => $query->paginate(10)
+            'events' => $query->paginate(10),
+            'totalEvents'   => Event::count(),
+            'pendingCount'  => Event::where('status','pending')->count(),
+            'approvedCount' => Event::where('status','approved')->count(),
         ];
     }
 
-    public function setTab($tab)
+    public function updatingSearch(): void { $this->resetPage(); }
+    public function updatingStatusFilter(): void { $this->resetPage(); }
+
+    // ─── Open CREATE modal ──────────────────────────────────────────────────
+    public function openCreate(): void
     {
-        $this->currentTab = $tab;
-        $this->resetPage();
+        $this->resetForm();
+        $this->status = 'approved';
+        $this->showModal = true;
     }
 
-    public function approveEvent(Event $event)
+    // ─── Open EDIT modal ────────────────────────────────────────────────────
+    public function openEdit(int $id): void
     {
-        $event->update(['status' => 'approved']);
-        session()->flash('success', "Event '{$event->title}' has been approved successfully.");
+        $event = Event::findOrFail($id);
+        $this->editingId     = $id;
+        $this->title         = $event->title;
+        $this->description   = $event->description;
+        $this->event_date    = $event->event_date->format('Y-m-d');
+        $this->start_time    = Carbon::parse($event->start_time)->format('H:i');
+        $this->end_time      = Carbon::parse($event->end_time)->format('H:i');
+        $this->location      = $event->location;
+        $this->status        = $event->status;
+        $this->existingImage = $event->image_path;
+        $this->image         = null;
+        $this->showModal     = true;
     }
 
-    public function rejectEvent(Event $event)
+    // ─── Save (Create or Update) ─────────────────────────────────────────────
+    public function save(): void
     {
-        $event->update(['status' => 'rejected']);
-        session()->flash('success', "Event '{$event->title}' has been rejected.");
+        $this->validate([
+            'title'       => 'required|string|max:255',
+            'description' => 'required|string',
+            'event_date'  => 'required|date',
+            'start_time'  => 'required',
+            'end_time'    => 'required',
+            'location'    => 'required|string|max:255',
+            'status'      => 'required|in:pending,approved,rejected',
+            'image'       => 'nullable|image|max:2048',
+        ]);
+
+        $imagePath = $this->existingImage;
+        if ($this->image) {
+            if ($imagePath) Storage::disk('public')->delete($imagePath);
+            $imagePath = $this->image->store('event-images', 'public');
+        }
+
+        $data = [
+            'title'       => $this->title,
+            'description' => $this->description,
+            'event_date'  => $this->event_date,
+            'start_time'  => $this->start_time,
+            'end_time'    => $this->end_time,
+            'location'    => $this->location,
+            'status'      => $this->status,
+            'image_path'  => $imagePath,
+        ];
+
+        if ($this->editingId) {
+            Event::findOrFail($this->editingId)->update($data);
+            session()->flash('success', 'Event updated successfully.');
+        } else {
+            Event::create(array_merge($data, ['user_id' => auth()->id()]));
+            session()->flash('success', 'Event created successfully.');
+        }
+
+        $this->resetForm();
+        $this->showModal = false;
     }
-    
-    public function deleteEvent(Event $event)
+
+    // ─── Confirm Delete ──────────────────────────────────────────────────────
+    public function confirmDelete(int $id): void
     {
-         $event->delete();
-         session()->flash('success', "Event deleted successfully.");
+        $this->deletingId = $id;
+        $this->showDeleteModal = true;
+    }
+
+    // ─── Delete ──────────────────────────────────────────────────────────────
+    public function deleteEvent(): void
+    {
+        $event = Event::findOrFail($this->deletingId);
+        if ($event->image_path) Storage::disk('public')->delete($event->image_path);
+        $event->delete();
+        $this->showDeleteModal = false;
+        $this->deletingId = null;
+        session()->flash('success', 'Event deleted successfully.');
+    }
+
+    // ─── Quick status change ─────────────────────────────────────────────────
+    public function setStatus(int $id, string $status): void
+    {
+        Event::findOrFail($id)->update(['status' => $status]);
+        session()->flash('success', 'Event status updated.');
+    }
+
+    private function resetForm(): void
+    {
+        $this->editingId     = null;
+        $this->title         = '';
+        $this->description   = '';
+        $this->event_date    = '';
+        $this->start_time    = '';
+        $this->end_time      = '';
+        $this->location      = '';
+        $this->status        = 'approved';
+        $this->image         = null;
+        $this->existingImage = null;
+        $this->resetValidation();
     }
 }; ?>
 
-<div class="container mx-auto py-12 px-6">
-    <div class="flex justify-between items-center mb-8">
+<div>
+    {{-- ── Page Header ── --}}
+    <div class="px-6 py-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-            <h2 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
-                Community Events Management
-            </h2>
-            <p class="text-gray-400 mt-2">Verify and manage events submitted by community members.</p>
+            <h1 class="text-2xl font-extrabold text-white tracking-tight">Events Management</h1>
+            <p class="text-slate-400 text-sm mt-0.5">Create, edit, approve or remove community events.</p>
         </div>
+        <button wire:click="openCreate"
+            class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-bold text-white shadow-lg transition-all hover:-translate-y-0.5"
+            style="background:linear-gradient(135deg,#6366f1,#8b5cf6); box-shadow:0 4px 15px rgba(99,102,241,.35);">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+            New Event
+        </button>
     </div>
 
-    @if (session()->has('success'))
-        <div class="mb-6 bg-green-500/10 border border-green-500/20 text-green-400 px-4 py-3 rounded-xl flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+    {{-- ── Stats ── --}}
+    <div class="px-6 pb-5 grid grid-cols-3 gap-4">
+        @foreach([
+            ['label'=>'Total Events', 'value'=>$totalEvents, 'color'=>'#6366f1'],
+            ['label'=>'Pending', 'value'=>$pendingCount, 'color'=>'#f59e0b'],
+            ['label'=>'Approved', 'value'=>$approvedCount, 'color'=>'#10b981'],
+        ] as $stat)
+        <div class="rounded-2xl border border-slate-700/50 p-4 flex items-center gap-3" style="background:#1e293b;">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style="background:{{ $stat['color'] }}18; border:1px solid {{ $stat['color'] }}30;">
+                <span class="text-base font-extrabold" style="color:{{ $stat['color'] }};">{{ $stat['value'] }}</span>
+            </div>
+            <span class="text-xs font-semibold text-slate-400">{{ $stat['label'] }}</span>
+        </div>
+        @endforeach
+    </div>
+
+    {{-- ── Flash ── --}}
+    @if(session()->has('success'))
+        <div class="mx-6 mb-4 px-4 py-3 rounded-xl text-sm font-medium text-emerald-300 flex items-center gap-2"
+            style="background:rgba(16,185,129,.1); border:1px solid rgba(16,185,129,.25);">
+            <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
             </svg>
             {{ session('success') }}
         </div>
     @endif
 
-    <!-- Tabs -->
-    <div class="flex space-x-2 mb-6 border-b border-[rgba(255,255,255,0.1)] pb-px">
-        <button wire:click="setTab('pending')" class="px-6 py-3 font-medium text-sm rounded-t-lg transition-colors {{ $currentTab === 'pending' ? 'bg-[rgba(255,255,255,0.05)] text-indigo-400 border-t border-l border-r border-[rgba(255,255,255,0.1)]' : 'text-gray-400 hover:text-white hover:bg-[rgba(255,255,255,0.02)]' }}">
-            <div class="flex items-center gap-2">
-                Pending Verification
-                @if($currentTab === 'pending' && $events->total() > 0)
-                    <span class="bg-indigo-500 text-white text-xs px-2 py-0.5 rounded-full">{{ $events->total() }}</span>
-                @endif
-            </div>
-        </button>
-        <button wire:click="setTab('all')" class="px-6 py-3 font-medium text-sm rounded-t-lg transition-colors {{ $currentTab === 'all' ? 'bg-[rgba(255,255,255,0.05)] text-indigo-400 border-t border-l border-r border-[rgba(255,255,255,0.1)]' : 'text-gray-400 hover:text-white hover:bg-[rgba(255,255,255,0.02)]' }}">
-            All Events
-        </button>
+    {{-- ── Filters ── --}}
+    <div class="px-6 pb-4 flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none"
+                fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+            </svg>
+            <input wire:model.live.debounce.300ms="search" type="text" placeholder="Search by title or location…"
+                class="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-700 text-sm text-slate-200 placeholder-slate-500 outline-none focus:border-indigo-500 transition-all"
+                style="background:#1e293b;">
+        </div>
+        <select wire:model.live="statusFilter"
+            class="px-4 py-2.5 rounded-xl border border-slate-700 text-sm text-slate-200 outline-none focus:border-indigo-500 transition-all"
+            style="background:#1e293b;">
+            <option value="all">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+        </select>
     </div>
 
-    <!-- Events List -->
-    <div class="glass-card rounded-2xl border border-[rgba(255,255,255,0.05)] bg-[rgba(255,255,255,0.02)] overflow-hidden">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-gray-300">
-                <thead class="bg-[rgba(255,255,255,0.02)] border-b border-[rgba(255,255,255,0.05)] text-xs uppercase text-gray-400">
-                    <tr>
-                        <th class="px-6 py-4 font-semibold">Event Details</th>
-                        <th class="px-6 py-4 font-semibold">Date & Time</th>
-                        <th class="px-6 py-4 font-semibold">Created By</th>
-                        <th class="px-6 py-4 font-semibold">Status</th>
-                        <th class="px-6 py-4 font-semibold text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-[rgba(255,255,255,0.05)]">
-                    @forelse($events as $event)
-                        <tr class="hover:bg-[rgba(255,255,255,0.02)] transition-colors">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center gap-4">
-                                    @if($event->image_path)
-                                        <div class="h-12 w-16 rounded overflow-hidden bg-gray-800 flex-shrink-0">
-                                            <img src="{{ asset('storage/' . $event->image_path) }}" class="w-full h-full object-cover">
-                                        </div>
-                                    @else
-                                        <div class="h-12 w-16 rounded bg-indigo-500/10 flex items-center justify-center text-indigo-400 flex-shrink-0">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
-                                        </div>
-                                    @endif
-                                    <div>
-                                        <div class="font-bold text-white text-base">{{ $event->title }}</div>
-                                        <div class="text-xs text-gray-500 flex items-center gap-1 mt-1">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                                            {{ $event->location }}
+    {{-- ── Table ── --}}
+    <div class="px-6 pb-10">
+        <div class="rounded-2xl border border-slate-700/50 overflow-hidden" style="background:#1e293b;">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm text-left text-slate-300">
+                    <thead class="text-xs uppercase text-slate-500 border-b border-slate-700/50" style="background:#0f172a;">
+                        <tr>
+                            <th class="px-5 py-3.5 font-semibold">Event</th>
+                            <th class="px-5 py-3.5 font-semibold">Date & Time</th>
+                            <th class="px-5 py-3.5 font-semibold">Location</th>
+                            <th class="px-5 py-3.5 font-semibold">Created By</th>
+                            <th class="px-5 py-3.5 font-semibold">Status</th>
+                            <th class="px-5 py-3.5 font-semibold text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-700/40">
+                        @forelse($events as $event)
+                            <tr class="hover:bg-white/[0.02] transition-colors">
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center gap-3">
+                                        @if($event->image_path)
+                                            <img src="{{ asset('storage/'.$event->image_path) }}"
+                                                class="w-14 h-10 rounded-lg object-cover border border-slate-700 shrink-0">
+                                        @else
+                                            <div class="w-14 h-10 rounded-lg flex items-center justify-center border border-slate-700 shrink-0"
+                                                style="background:rgba(99,102,241,.1);">
+                                                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                                </svg>
+                                            </div>
+                                        @endif
+                                        <div>
+                                            <p class="font-semibold text-white line-clamp-1">{{ $event->title }}</p>
+                                            <p class="text-xs text-slate-500 line-clamp-1 mt-0.5">{{ Str::limit($event->description, 50) }}</p>
                                         </div>
                                     </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-gray-300">{{ $event->event_date->format('d M Y') }}</div>
-                                <div class="text-xs text-gray-500">{{ $event->start_time->format('h:i A') }} - {{ $event->end_time->format('h:i A') }}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-indigo-400 font-medium">{{ $event->creator->name }}</div>
-                                <div class="text-xs text-gray-500">{{ $event->created_at->diffForHumans() }}</div>
-                            </td>
-                            <td class="px-6 py-4">
-                                @if($event->status === 'approved')
-                                    <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium bg-green-500/10 text-green-400 border border-green-500/20">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-green-400"></span> Approved
+                                </td>
+                                <td class="px-5 py-4">
+                                    <p class="text-slate-200 font-medium">{{ $event->event_date->format('d M Y') }}</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">{{ Carbon::parse($event->start_time)->format('h:i A') }} – {{ Carbon::parse($event->end_time)->format('h:i A') }}</p>
+                                </td>
+                                <td class="px-5 py-4 text-slate-400 max-w-[160px]">
+                                    <p class="line-clamp-1">{{ $event->location }}</p>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <p class="text-indigo-400 font-medium">{{ $event->creator->name ?? 'Admin' }}</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">{{ $event->created_at->diffForHumans() }}</p>
+                                </td>
+                                <td class="px-5 py-4">
+                                    @php
+                                        $sc = ['pending'=>['bg'=>'rgba(245,158,11,.1)','border'=>'rgba(245,158,11,.25)','text'=>'#fbbf24'],
+                                               'approved'=>['bg'=>'rgba(16,185,129,.1)','border'=>'rgba(16,185,129,.25)','text'=>'#34d399'],
+                                               'rejected'=>['bg'=>'rgba(239,68,68,.1)','border'=>'rgba(239,68,68,.25)','text'=>'#f87171']][$event->status] ?? [];
+                                    @endphp
+                                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+                                        style="background:{{ $sc['bg'] }}; border:1px solid {{ $sc['border'] }}; color:{{ $sc['text'] }};">
+                                        <span class="w-1.5 h-1.5 rounded-full" style="background:{{ $sc['text'] }};"></span>
+                                        {{ ucfirst($event->status) }}
                                     </span>
-                                @elseif($event->status === 'rejected')
-                                    <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-red-400"></span> Rejected
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1.5 py-1 px-3 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 shadow-[0_0_10px_rgba(234,179,8,0.2)]">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-pulse"></span> Pending
-                                    </span>
-                                @endif
-                            </td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="flex items-center justify-end gap-2">
-                                    @if($event->status === 'pending')
-                                        <button wire:click="approveEvent({{ $event->id }})" class="p-2 text-green-400 hover:bg-green-500/10 rounded-lg transition-colors" title="Approve">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center justify-end gap-1">
+                                        {{-- Edit --}}
+                                        <button wire:click="openEdit({{ $event->id }})"
+                                            class="p-2 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all" title="Edit">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                            </svg>
                                         </button>
-                                        <button wire:click="rejectEvent({{ $event->id }})" class="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Reject">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                                        </button>
-                                    @else
-                                        @if($event->status === 'rejected')
-                                            <button wire:click="approveEvent({{ $event->id }})" class="p-2 text-gray-400 hover:text-green-400 hover:bg-green-500/10 rounded-lg transition-colors" title="Approve">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+                                        {{-- Approve (if not approved) --}}
+                                        @if($event->status !== 'approved')
+                                            <button wire:click="setStatus({{ $event->id }}, 'approved')"
+                                                class="p-2 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-emerald-500/10 transition-all" title="Approve">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                                </svg>
                                             </button>
                                         @endif
-                                        <button wire:confirm="Are you sure you want to delete this event?" wire:click="deleteEvent({{ $event->id }})" class="p-2 text-gray-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors" title="Delete">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>
+                                        {{-- Reject (if not rejected) --}}
+                                        @if($event->status !== 'rejected')
+                                            <button wire:click="setStatus({{ $event->id }}, 'rejected')"
+                                                class="p-2 rounded-lg text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 transition-all" title="Reject">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        @endif
+                                        {{-- Delete --}}
+                                        <button wire:click="confirmDelete({{ $event->id }})"
+                                            class="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-red-500/10 transition-all" title="Delete">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
                                         </button>
-                                    @endif
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                                <div class="flex flex-col items-center justify-center">
-                                    <div class="h-16 w-16 bg-[rgba(255,255,255,0.02)] rounded-full flex items-center justify-center mb-4">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/><path d="M8 14h.01"/><path d="M12 14h.01"/><path d="M16 14h.01"/><path d="M8 18h.01"/><path d="M12 18h.01"/><path d="M16 18h.01"/></svg>
                                     </div>
-                                    <p class="text-lg font-medium text-gray-400">No events found.</p>
-                                    <p class="text-sm mt-1">There are currently no events matching this status.</p>
-                                </div>
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        @if($events->hasPages())
-            <div class="px-6 py-4 border-t border-[rgba(255,255,255,0.05)]">
-                {{ $events->links() }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="px-5 py-16 text-center">
+                                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3"
+                                        style="background:rgba(99,102,241,.1); border:1px solid rgba(99,102,241,.2);">
+                                        <svg class="w-7 h-7 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                        </svg>
+                                    </div>
+                                    <p class="text-slate-400 font-semibold">No events found</p>
+                                    <p class="text-slate-600 text-xs mt-1">Try adjusting your search or create a new event.</p>
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
-        @endif
+            @if($events->hasPages())
+                <div class="px-5 py-4 border-t border-slate-700/50">
+                    {{ $events->links() }}
+                </div>
+            @endif
+        </div>
     </div>
+
+    {{-- ════════════════════════════════════════════════════════
+         CREATE / EDIT MODAL
+    ════════════════════════════════════════════════════════ --}}
+    @if($showModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style="background:rgba(0,0,0,.65); backdrop-filter:blur(4px);">
+            <div class="w-full max-w-xl rounded-2xl border border-slate-700/60 shadow-2xl overflow-hidden"
+                style="background:#1e293b;" wire:click.stop>
+
+                {{-- Modal header --}}
+                <div class="px-6 py-4 border-b border-slate-700/50 flex items-center justify-between"
+                    style="background:#0f172a;">
+                    <h3 class="text-base font-bold text-white">
+                        {{ $editingId ? 'Edit Event' : 'Create New Event' }}
+                    </h3>
+                    <button wire:click="$set('showModal', false)"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Modal body --}}
+                <form wire:submit="save" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+
+                    @php $inputClass = "w-full px-4 py-2.5 rounded-xl border border-slate-600 text-slate-100 text-sm placeholder-slate-500 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"; $inputStyle = "background:#0f172a;"; @endphp
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Title *</label>
+                        <input wire:model="title" type="text" placeholder="Event title" class="{{ $inputClass }}" style="{{ $inputStyle }}">
+                        @error('title') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Description *</label>
+                        <textarea wire:model="description" rows="3" placeholder="Describe the event…"
+                            class="{{ $inputClass }}" style="{{ $inputStyle }} resize-none;"></textarea>
+                        @error('description') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Date *</label>
+                            <input wire:model="event_date" type="date" class="{{ $inputClass }}" style="{{ $inputStyle }}">
+                            @error('event_date') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Start *</label>
+                            <input wire:model="start_time" type="time" class="{{ $inputClass }}" style="{{ $inputStyle }}">
+                            @error('start_time') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">End *</label>
+                            <input wire:model="end_time" type="time" class="{{ $inputClass }}" style="{{ $inputStyle }}">
+                            @error('end_time') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Location *</label>
+                        <input wire:model="location" type="text" placeholder="e.g. Community Hall, Block A" class="{{ $inputClass }}" style="{{ $inputStyle }}">
+                        @error('location') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Status</label>
+                        <select wire:model="status" class="{{ $inputClass }}" style="{{ $inputStyle }}">
+                            <option value="approved">Approved</option>
+                            <option value="pending">Pending</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+
+                    {{-- Image Upload --}}
+                    <div>
+                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Event Image</label>
+                        @if($existingImage && !$image)
+                            <div class="mb-2 flex items-center gap-3 p-2 rounded-lg border border-slate-700" style="background:#0f172a;">
+                                <img src="{{ asset('storage/'.$existingImage) }}" class="w-16 h-10 rounded-lg object-cover">
+                                <p class="text-xs text-slate-400">Current image</p>
+                            </div>
+                        @endif
+                        @if($image)
+                            <div class="mb-2 flex items-center gap-3 p-2 rounded-lg border border-indigo-700/40" style="background:#0f172a;">
+                                <img src="{{ $image->temporaryUrl() }}" class="w-16 h-10 rounded-lg object-cover">
+                                <p class="text-xs text-slate-400">New image preview</p>
+                            </div>
+                        @endif
+                        <input wire:model="image" type="file" accept="image/*"
+                            class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:text-white file:cursor-pointer transition-all"
+                            style="file-bg:rgba(99,102,241,.8);">
+                        @error('image') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    {{-- Buttons --}}
+                    <div class="flex justify-end gap-3 pt-2">
+                        <button type="button" wire:click="$set('showModal', false)"
+                            class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-300 border border-slate-600 hover:bg-white/5 transition-all">
+                            Cancel
+                        </button>
+                        <button type="submit"
+                            class="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:-translate-y-0.5"
+                            style="background:linear-gradient(135deg,#6366f1,#8b5cf6); box-shadow:0 4px 15px rgba(99,102,241,.35);">
+                            <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update Event' : 'Create Event' }}</span>
+                            <span wire:loading wire:target="save">Saving…</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    @endif
+
+    {{-- ════════════════════════════════════════════════════════
+         DELETE CONFIRM MODAL
+    ════════════════════════════════════════════════════════ --}}
+    @if($showDeleteModal)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style="background:rgba(0,0,0,.65); backdrop-filter:blur(4px);">
+            <div class="w-full max-w-sm rounded-2xl border border-slate-700/60 shadow-2xl p-6 text-center"
+                style="background:#1e293b;">
+                <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4"
+                    style="background:rgba(239,68,68,.12); border:1px solid rgba(239,68,68,.25);">
+                    <svg class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-bold text-white mb-1">Delete Event?</h3>
+                <p class="text-sm text-slate-400 mb-6">This action cannot be undone. The event and its image will be permanently removed.</p>
+                <div class="flex gap-3">
+                    <button wire:click="$set('showDeleteModal', false)"
+                        class="flex-1 py-2.5 rounded-xl text-sm font-semibold text-slate-300 border border-slate-600 hover:bg-white/5 transition-all">
+                        Cancel
+                    </button>
+                    <button wire:click="deleteEvent"
+                        class="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all"
+                        style="background:rgba(239,68,68,.8); border:1px solid rgba(239,68,68,.4);">
+                        <span wire:loading.remove wire:target="deleteEvent">Delete</span>
+                        <span wire:loading wire:target="deleteEvent">Deleting…</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 </div>

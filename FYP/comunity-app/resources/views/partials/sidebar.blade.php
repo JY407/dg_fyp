@@ -14,7 +14,7 @@
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                     <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
-                <span>Home</span>
+                <span>{{ __('app.nav_home') }}</span>
             </a>
         </li>
         <li>
@@ -27,7 +27,7 @@
                     <rect x="14" y="14" width="7" height="7"></rect>
                     <rect x="3" y="14" width="7" height="7"></rect>
                 </svg>
-                <span>Dashboard</span>
+                <span>{{ __('app.nav_dashboard') }}</span>
             </a>
         </li>
         <li>
@@ -38,7 +38,7 @@
                     <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
                     <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                 </svg>
-                <span>Announcements</span>
+                <span>{{ __('app.nav_announcements') }}</span>
             </a>
         </li>
         <li>
@@ -50,7 +50,7 @@
                     <line x1="8" y1="2" x2="8" y2="6"></line>
                     <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg>
-                <span>Events</span>
+                <span>{{ __('app.nav_events') }}</span>
             </a>
         </li>
         <li>
@@ -60,7 +60,7 @@
                     <path
                         d="m12 3-1.9 5.8a2 2 0 0 1-1.287 1.288L3 12l5.8 1.9a2 2 0 0 1 1.288 1.287L12 21l1.9-5.8a2 2 0 0 1 1.287-1.288L21 12l-5.8-1.9a2 2 0 0 1-1.288-1.287Z" />
                 </svg>
-                <span>Culture</span>
+                <span>{{ __('app.nav_culture') }}</span>
             </a>
         </li>
         <li>
@@ -71,7 +71,7 @@
                         d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
                     </path>
                 </svg>
-                <span>Forum</span>
+                <span>{{ __('app.nav_forum') }}</span>
             </a>
         </li>
         <li>
@@ -80,7 +80,7 @@
                     stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
-                <span>Chat</span>
+                <span>{{ __('app.nav_chat') }}</span>
             </a>
         </li>
         <li>
@@ -93,7 +93,7 @@
                     <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                     <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                 </svg>
-                <span>Visitors</span>
+                <span>{{ __('app.nav_visitors') }}</span>
             </a>
         </li>
         <li>
@@ -103,7 +103,7 @@
                     <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                     <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
-                <span>Contact</span>
+                <span>{{ __('app.nav_contact') }}</span>
             </a>
         </li>
         <li>
@@ -114,7 +114,7 @@
                         d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z">
                     </path>
                 </svg>
-                <span>Services</span>
+                <span>{{ __('app.nav_services') }}</span>
             </a>
         </li>
         <li>
@@ -129,7 +129,7 @@
                     <rect x="7" y="13" width="2" height="2"></rect>
                     <rect x="15" y="13" width="2" height="2"></rect>
                 </svg>
-                <span>Facilities</span>
+                <span>{{ __('app.nav_facilities') }}</span>
             </a>
         </li>
         <li>
@@ -142,10 +142,34 @@
                     <line x1="12" y1="9" x2="12" y2="13"></line>
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
-                <span>Emergency</span>
+                <span>{{ __('app.nav_emergency') }}</span>
             </a>
         </li>
     </ul>
+
+    {{-- Language Switcher --}}
+    <div style="padding: 0.75rem 1rem; border-top: 1px solid rgba(255,255,255,0.07);">
+        <p style="font-size: 0.7rem; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem;">
+            {{ __('app.language') }}
+        </p>
+        <div style="display: flex; gap: 0.4rem;">
+            <a href="{{ route('lang.switch', 'en') }}"
+               style="flex: 1; text-align: center; padding: 0.3rem 0; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-decoration: none;
+                      {{ app()->getLocale() === 'en' ? 'background: #6366f1; color: #fff;' : 'background: rgba(255,255,255,0.06); color: #94a3b8;' }}">
+                EN
+            </a>
+            <a href="{{ route('lang.switch', 'ms') }}"
+               style="flex: 1; text-align: center; padding: 0.3rem 0; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-decoration: none;
+                      {{ app()->getLocale() === 'ms' ? 'background: #6366f1; color: #fff;' : 'background: rgba(255,255,255,0.06); color: #94a3b8;' }}">
+                MY
+            </a>
+            <a href="{{ route('lang.switch', 'zh') }}"
+               style="flex: 1; text-align: center; padding: 0.3rem 0; border-radius: 6px; font-size: 0.75rem; font-weight: 700; text-decoration: none;
+                      {{ app()->getLocale() === 'zh' ? 'background: #6366f1; color: #fff;' : 'background: rgba(255,255,255,0.06); color: #94a3b8;' }}">
+                中
+            </a>
+        </div>
+    </div>
 
     <div class="sidebar-footer">
         @auth
@@ -174,7 +198,7 @@
                         <polyline points="16 17 21 12 16 7"></polyline>
                         <line x1="21" y1="12" x2="9" y2="12"></line>
                     </svg>
-                    <span>Logout</span>
+                    <span>{{ __('app.nav_logout') }}</span>
                 </button>
             </form>
         @else
@@ -186,7 +210,7 @@
                         <polyline points="10 17 15 12 10 7"></polyline>
                         <line x1="15" y1="12" x2="3" y2="12"></line>
                     </svg>
-                    <span>Login</span>
+                    <span>{{ __('app.nav_login') }}</span>
                 </a>
                 <a href="{{ route('register') }}" class="sidebar-link">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -196,7 +220,7 @@
                         <line x1="20" y1="8" x2="20" y2="14"></line>
                         <line x1="23" y1="11" x2="17" y2="11"></line>
                     </svg>
-                    <span>Register</span>
+                    <span>{{ __('app.nav_register') }}</span>
                 </a>
             </div>
         @endauth
