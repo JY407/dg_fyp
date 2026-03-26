@@ -38,360 +38,374 @@ new #[Layout('layouts.app')] class extends Component {
     }
 }; ?>
 
-<div class="min-h-screen" style="background:#0f172a;">
+<div style="background:#0f172a; min-height:100vh;">
     @push('styles')
     <style>
-        /* ── Hero ── */
-        .ann-hero {
-            position: relative;
-            overflow: hidden;
-            padding: 3.5rem 2rem 3rem;
-            background: linear-gradient(135deg, rgba(79,70,229,.25) 0%, rgba(139,92,246,.12) 40%, rgba(15,23,42,0) 80%);
-            border-bottom: 1px solid rgba(99,102,241,.2);
-        }
-        .ann-hero-orb {
-            position: absolute;
-            border-radius: 9999px;
-            filter: blur(80px);
-            pointer-events: none;
-        }
+        /* ── Page wrapper ── */
+        .ann-page { padding: 2rem; max-width: 1200px; margin: 0 auto; }
 
-        .ann-search-wrap { position: relative; }
-        .ann-search-wrap svg { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); }
+        /* ── Page header bar ── */
+        .ann-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+        .ann-header-icon {
+            width: 40px; height: 40px; border-radius: 12px;
+            background: linear-gradient(135deg,#6366f1,#8b5cf6);
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            box-shadow: 0 4px 15px rgba(99,102,241,.35);
+        }
+        .ann-header-text h1 {
+            font-size: 20px; font-weight: 800; color: #f1f5f9;
+            letter-spacing: -.02em; line-height: 1;
+        }
+        .ann-header-text p { font-size: 12px; color: #64748b; margin-top: 2px; }
+        .ann-count-badge {
+            margin-left: auto;
+            display: flex; align-items: center; gap: 6px;
+            padding: 5px 12px; border-radius: 10px;
+            background: rgba(99,102,241,.12); border: 1px solid rgba(99,102,241,.25);
+        }
+        .ann-count-badge span:first-child {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #818cf8; animation: pulse-dot 2s ease-in-out infinite;
+        }
+        .ann-count-badge span:last-child { font-size: 12px; font-weight: 700; color: #a5b4fc; }
+        @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+        /* ── Search bar ── */
+        .ann-search-wrap { position: relative; margin-bottom: 1.75rem; }
+        .ann-search-wrap .search-icon {
+            position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+            color: #475569; pointer-events: none;
+        }
         .ann-search {
-            width: 100%; padding: 13px 20px 13px 46px;
-            background: rgba(15,23,42,.85); border: 1px solid rgba(99,102,241,.25);
-            border-radius: 16px; color: #e2e8f0; font-size: 14px; outline: none;
+            width: 100%; padding: 11px 16px 11px 42px;
+            background: rgba(30,41,59,.7); border: 1px solid rgba(71,85,105,.4);
+            border-radius: 12px; color: #e2e8f0; font-size: 13.5px; outline: none;
             transition: border-color .2s, box-shadow .2s;
         }
         .ann-search::placeholder { color: #475569; }
-        .ann-search:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgba(99,102,241,.18), 0 0 20px rgba(99,102,241,.1); }
+        .ann-search:focus {
+            border-color: rgba(99,102,241,.6);
+            box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+        }
 
-        /* ── Card ── */
-        .ann-card {
-            position: relative;
-            background: rgba(30,41,59,.6);
-            border: 1px solid rgba(71,85,105,.35);
-            border-radius: 20px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease, background .22s ease;
-            display: flex;
-            flex-direction: column;
+        /* ── Featured (top) card ── */
+        .ann-featured {
+            position: relative; border-radius: 18px; overflow: hidden;
+            background: rgba(30,41,59,.7); border: 1px solid rgba(99,102,241,.2);
+            margin-bottom: 1.5rem; cursor: pointer;
+            transition: transform .2s, box-shadow .2s, border-color .2s;
         }
-        .ann-card:hover {
-            transform: translateY(-4px);
-            background: rgba(30,41,59,.9);
+        .ann-featured:hover {
+            transform: translateY(-2px);
             border-color: rgba(99,102,241,.45);
-            box-shadow: 0 20px 50px rgba(0,0,0,.4), 0 0 0 1px rgba(99,102,241,.2);
+            box-shadow: 0 16px 45px rgba(0,0,0,.4);
         }
-        .ann-card-bar { height: 3px; width: 100%; }
-        .ann-card-body { padding: 1.4rem 1.5rem 1.2rem; flex: 1; display: flex; flex-direction: column; }
-        .ann-card-meta { display: flex; align-items: center; gap: 8px; margin-bottom: .75rem; }
-        .ann-badge-new {
+        .ann-featured-bar {
+            height: 3px;
+            background: linear-gradient(90deg,#6366f1,#8b5cf6,#a855f7);
+        }
+        .ann-featured-body {
+            padding: 1.4rem 1.6rem;
+            display: flex; align-items: flex-start; gap: 1.2rem;
+        }
+        .ann-featured-icon {
+            width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+            background: rgba(99,102,241,.15); border: 1px solid rgba(99,102,241,.25);
+            display: flex; align-items: center; justify-content: center;
+        }
+        .ann-featured-meta { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+        .ann-tag-latest {
+            font-size: 10px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+            padding: 2px 8px; border-radius: 6px;
+            background: rgba(99,102,241,.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,.3);
+        }
+        .ann-tag-new {
             font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
-            padding: 2px 8px; border-radius: 9999px;
-            background: rgba(99,102,241,.2); color: #a5b4fc; border: 1px solid rgba(99,102,241,.35);
+            padding: 2px 8px; border-radius: 6px;
+            background: rgba(16,185,129,.15); color: #6ee7b7; border: 1px solid rgba(16,185,129,.3);
             animation: pulse-badge 2s ease-in-out infinite;
         }
-        @keyframes pulse-badge {
-            0%, 100% { opacity: 1; }
-            50% { opacity: .65; }
+        @keyframes pulse-badge { 0%,100%{opacity:1} 50%{opacity:.6} }
+        .ann-featured-date { font-size: 11px; color: #64748b; margin-left: auto; }
+        .ann-featured-title {
+            font-size: 18px; font-weight: 800; color: #f1f5f9;
+            letter-spacing: -.02em; line-height: 1.35; margin-bottom: 6px;
+            transition: color .2s;
         }
-        .ann-card-date { font-size: 11px; font-weight: 600; color: #64748b; }
-        .ann-card-title {
-            font-size: 16px; font-weight: 800; color: #f1f5f9; line-height: 1.4;
-            margin-bottom: .6rem; letter-spacing: -.01em;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-        }
-        .ann-card:hover .ann-card-title { color: #a5b4fc; }
-        .ann-card-preview {
-            font-size: 13px; color: #64748b; line-height: 1.6;
-            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-            flex: 1;
-        }
-        .ann-card-footer {
-            padding: .85rem 1.5rem;
-            border-top: 1px solid rgba(71,85,105,.2);
+        .ann-featured:hover .ann-featured-title { color: #a5b4fc; }
+        .ann-featured-preview { font-size: 13px; color: #64748b; line-height: 1.65; }
+        .ann-featured-footer {
             display: flex; align-items: center; justify-content: space-between;
+            padding: .9rem 1.6rem; border-top: 1px solid rgba(71,85,105,.2);
         }
-        .ann-read-btn {
+        .ann-read-link {
             font-size: 12px; font-weight: 700; color: #818cf8;
             display: flex; align-items: center; gap: 4px; transition: gap .2s;
         }
-        .ann-card:hover .ann-read-btn { gap: 7px; }
+        .ann-featured:hover .ann-read-link { gap: 8px; }
+
+        /* ── Card grid ── */
+        .ann-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+        @media(max-width:900px) { .ann-grid { grid-template-columns: repeat(2,1fr); } }
+        @media(max-width:580px) { .ann-grid { grid-template-columns: 1fr; } }
+
+        .ann-card {
+            border-radius: 16px; overflow: hidden;
+            background: rgba(30,41,59,.55); border: 1px solid rgba(71,85,105,.3);
+            cursor: pointer; display: flex; flex-direction: column;
+            transition: transform .2s, box-shadow .2s, border-color .2s, background .2s;
+        }
+        .ann-card:hover {
+            transform: translateY(-3px);
+            background: rgba(30,41,59,.85);
+            border-color: rgba(99,102,241,.4);
+            box-shadow: 0 14px 40px rgba(0,0,0,.35);
+        }
+        .ann-card-bar { height: 3px; }
+        .ann-card-body { padding: 1.1rem 1.2rem; flex: 1; }
+        .ann-card-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+        .ann-card-date { font-size: 10.5px; font-weight: 600; color: #475569; }
+        .ann-card-title {
+            font-size: 15px; font-weight: 800; color: #e2e8f0; line-height: 1.4;
+            margin-bottom: 6px; letter-spacing: -.01em;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+            transition: color .2s;
+        }
+        .ann-card:hover .ann-card-title { color: #a5b4fc; }
+        .ann-card-preview {
+            font-size: 12.5px; color: #475569; line-height: 1.6;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .ann-card-footer {
+            padding: .7rem 1.2rem; border-top: 1px solid rgba(71,85,105,.18);
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .ann-card-time { font-size: 10px; color: #334155; }
+        .ann-card-cta {
+            font-size: 11px; font-weight: 700; color: #818cf8;
+            display: flex; align-items: center; gap: 3px; transition: gap .2s;
+        }
+        .ann-card:hover .ann-card-cta { gap: 6px; }
+
+        /* ── Empty state ── */
+        .ann-empty {
+            text-align: center; padding: 5rem 2rem;
+            display: flex; flex-direction: column; align-items: center;
+        }
 
         /* ── Modal ── */
         .ann-modal-backdrop {
             position: fixed; inset: 0; z-index: 9999;
-            background: rgba(0,0,0,.75);
-            backdrop-filter: blur(12px);
-            display: flex; align-items: center; justify-content: center;
-            padding: 1.5rem;
-            animation: fade-in .18s ease;
+            background: rgba(0,0,0,.72); backdrop-filter: blur(10px);
+            display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+            animation: fade-in .16s ease;
         }
         .ann-modal {
-            width: 100%; max-width: 700px; max-height: 90vh;
-            background: #0f172a;
-            border: 1px solid rgba(99,102,241,.3);
-            border-radius: 24px;
-            box-shadow: 0 40px 100px rgba(0,0,0,.7), 0 0 0 1px rgba(99,102,241,.15);
-            overflow: hidden;
-            display: flex; flex-direction: column;
-            animation: slide-up .22s cubic-bezier(.22,1,.36,1);
+            width: 100%; max-width: 680px; max-height: 88vh;
+            background: #0f172a; border: 1px solid rgba(99,102,241,.28);
+            border-radius: 22px; box-shadow: 0 40px 100px rgba(0,0,0,.7);
+            overflow: hidden; display: flex; flex-direction: column;
+            animation: slide-up .2s cubic-bezier(.22,1,.36,1);
         }
-        .ann-modal-top { height: 4px; width: 100%; background: linear-gradient(90deg,#6366f1,#8b5cf6,#a855f7); flex-shrink: 0; }
+        .ann-modal-bar { height: 3px; background: linear-gradient(90deg,#6366f1,#8b5cf6,#a855f7); flex-shrink:0; }
         .ann-modal-header {
-            padding: 1.5rem 2rem 1.25rem;
-            border-bottom: 1px solid rgba(71,85,105,.25);
-            background: rgba(30,41,59,.5);
+            padding: 1.4rem 1.8rem 1.2rem;
+            border-bottom: 1px solid rgba(71,85,105,.2);
+            background: rgba(30,41,59,.45);
             display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
             flex-shrink: 0;
         }
         .ann-modal-close {
-            width: 34px; height: 34px; border-radius: 10px; border: 1px solid rgba(71,85,105,.4);
-            background: rgba(71,85,105,.15); display: flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 9px;
+            border: 1px solid rgba(71,85,105,.4); background: rgba(71,85,105,.15);
+            display: flex; align-items: center; justify-content: center;
             color: #64748b; cursor: pointer; transition: all .2s; flex-shrink: 0;
         }
-        .ann-modal-close:hover { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.35); color: #f87171; }
-        .ann-modal-body { padding: 2rem; overflow-y: auto; flex: 1; }
-        @keyframes fade-in { from { opacity:0; } to { opacity:1; } }
-        @keyframes slide-up { from { opacity:0; transform: translateY(20px) scale(.97); } to { opacity:1; transform: translateY(0) scale(1); } }
-
-        /* ── Empty state ── */
-        .ann-empty {
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; padding: 5rem 2rem; text-align: center;
+        .ann-modal-close:hover { background: rgba(239,68,68,.15); border-color: rgba(239,68,68,.3); color: #f87171; }
+        .ann-modal-body { padding: 1.8rem; overflow-y: auto; flex: 1; }
+        .ann-modal-footer {
+            padding: .85rem 1.8rem; border-top: 1px solid rgba(71,85,105,.2);
+            background: rgba(30,41,59,.35);
+            display: flex; align-items: center; justify-content: space-between;
         }
+        @keyframes fade-in { from{opacity:0} to{opacity:1} }
+        @keyframes slide-up { from{opacity:0;transform:translateY(18px) scale(.97)} to{opacity:1;transform:none} }
     </style>
     @endpush
 
-    {{-- ═══════════════════════════════════════════
-         HERO HEADER
-    ════════════════════════════════════════════ --}}
-    <div class="ann-hero">
-        {{-- Background orbs --}}
-        <div class="ann-hero-orb" style="width:600px;height:600px;background:rgba(99,102,241,.14);top:-260px;right:-80px;"></div>
-        <div class="ann-hero-orb" style="width:400px;height:400px;background:rgba(139,92,246,.12);bottom:-180px;left:-80px;"></div>
-        <div class="ann-hero-orb" style="width:200px;height:200px;background:rgba(168,85,247,.1);top:40px;left:40%;"></div>
+    <div class="ann-page">
 
-        <div class="max-w-5xl mx-auto">
-            {{-- Title row --}}
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5 mb-7">
-                <div class="flex items-center gap-4">
-                    <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xl shadow-indigo-900/50"
-                        style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                        </svg>
-                    </div>
-                    <div>
-                        <h1 class="text-3xl font-extrabold tracking-tight leading-none"
-                            style="background:linear-gradient(90deg,#e0e7ff,#a5b4fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">
-                            {{ __('app.announcements_title') }}
-                        </h1>
-                        <p class="text-sm text-slate-400 mt-1.5">{{ __('app.announcements_subtitle') }}</p>
-                    </div>
-                </div>
-
-                {{-- Count badge --}}
-                @if($announcements->count() > 0)
-                <div class="flex items-center gap-2 px-4 py-2 rounded-2xl border"
-                    style="background:rgba(99,102,241,.1); border-color:rgba(99,102,241,.25);">
-                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse inline-block"></span>
-                    <span class="text-sm font-bold text-indigo-300">{{ $announcements->count() }} {{ $announcements->count() === 1 ? 'Notice' : 'Notices' }}</span>
-                </div>
-                @endif
-            </div>
-
-            {{-- Search --}}
-            <div class="ann-search-wrap mt-6">
-                <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+        {{-- ── Header bar ── --}}
+        <div class="ann-header">
+            <div class="ann-header-icon">
+                <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
                 </svg>
-                <input wire:model.live.debounce.300ms="search"
-                    type="text"
-                    placeholder="{{ __('app.search') }}"
-                    class="ann-search">
             </div>
+            <div class="ann-header-text">
+                <h1>{{ __('app.announcements_title') }}</h1>
+                <p>{{ __('app.announcements_subtitle') }}</p>
+            </div>
+            @if($announcements->count() > 0)
+            <div class="ann-count-badge">
+                <span></span>
+                <span>{{ $announcements->count() }} {{ $announcements->count() === 1 ? 'Notice' : 'Notices' }}</span>
+            </div>
+            @endif
         </div>
-    </div>
 
-    {{-- ═══════════════════════════════════════════
-         CONTENT
-    ════════════════════════════════════════════ --}}
-    <div class="px-6 py-8 max-w-5xl mx-auto">
+        {{-- ── Search ── --}}
+        <div class="ann-search-wrap">
+            <svg class="search-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"/>
+            </svg>
+            <input wire:model.live.debounce.300ms="search"
+                type="text"
+                placeholder="{{ __('app.search') }}…"
+                class="ann-search">
+        </div>
 
+        {{-- ── Content ── --}}
         @if($announcements->isEmpty())
-            {{-- Empty state --}}
             <div class="ann-empty">
-                <div class="w-20 h-20 rounded-3xl flex items-center justify-center mb-5 shadow-xl"
-                    style="background:rgba(99,102,241,.1); border:1px solid rgba(99,102,241,.2);">
-                    <svg class="w-9 h-9 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                <div style="width:64px;height:64px;border-radius:16px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.2);display:flex;align-items:center;justify-content:center;margin-bottom:1.2rem;">
+                    <svg width="28" height="28" fill="none" stroke="#818cf8" stroke-width="1.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
                             d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                     </svg>
                 </div>
-                <h3 class="text-xl font-bold text-slate-200 mb-2">
+                <h3 style="font-size:17px;font-weight:800;color:#e2e8f0;margin-bottom:6px;">
                     {{ $search ? __('app.no_results') : __('app.announcements_none') }}
                 </h3>
-                <p class="text-sm text-slate-500 max-w-sm">
-                    {{ $search ? 'Try a different keyword or clear the search.' : 'Check back soon for updates from management.' }}
+                <p style="font-size:13px;color:#475569;max-width:320px;">
+                    {{ $search ? 'Try a different keyword.' : 'Check back soon for updates from management.' }}
                 </p>
                 @if($search)
                     <button wire:click="$set('search','')"
-                        class="mt-5 px-5 py-2 rounded-xl text-sm font-bold text-indigo-300 border border-indigo-700/50 hover:bg-indigo-900/30 transition-colors">
+                        style="margin-top:1rem;padding:7px 18px;border-radius:10px;font-size:12px;font-weight:700;color:#a5b4fc;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.25);cursor:pointer;transition:background .2s;"
+                        onmouseover="this.style.background='rgba(99,102,241,.22)'"
+                        onmouseout="this.style.background='rgba(99,102,241,.12)'">
                         Clear search
                     </button>
                 @endif
             </div>
 
         @else
-            {{-- ── Latest / Featured (first announcement, full width) ── --}}
             @php
                 $first = $announcements->first();
                 $rest  = $announcements->skip(1);
                 $firstIsNew = $first->published_at->diffInDays(now()) <= 3;
+                $barColors  = ['#6366f1','#8b5cf6','#06b6d4','#10b981','#f59e0b','#ec4899'];
             @endphp
 
-            <div class="ann-card mb-5 w-full" wire:click="openAnnouncement({{ $first->id }})">
-                <div class="ann-card-bar" style="background:linear-gradient(90deg,#6366f1,#8b5cf6,#a855f7);"></div>
-                <div class="p-6 sm:p-8 flex flex-col sm:flex-row gap-6">
-                    {{-- Left: icon --}}
-                    <div class="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg"
-                        style="background:rgba(99,102,241,.15); border:1px solid rgba(99,102,241,.25);">
-                        <svg class="w-7 h-7 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            {{-- ── Featured card ── --}}
+            <div class="ann-featured" wire:click="openAnnouncement({{ $first->id }})">
+                <div class="ann-featured-bar"></div>
+                <div class="ann-featured-body">
+                    <div class="ann-featured-icon">
+                        <svg width="20" height="20" fill="none" stroke="#818cf8" stroke-width="1.8" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
                         </svg>
                     </div>
-                    {{-- Right: content --}}
-                    <div class="flex-1 min-w-0">
-                        <div class="flex flex-wrap items-center gap-2 mb-3">
-                            <span class="text-[10px] font-bold uppercase tracking-widest text-indigo-400 bg-indigo-900/30 border border-indigo-800/40 px-2.5 py-0.5 rounded-full">
-                                Latest
-                            </span>
-                            @if($firstIsNew)
-                                <span class="ann-badge-new">New</span>
-                            @endif
-                            <span class="text-xs text-slate-500">{{ $first->published_at->format('d F Y') }}</span>
-                            <span class="text-xs text-slate-600 ml-auto">{{ $first->published_at->diffForHumans() }}</span>
+                    <div style="flex:1;min-width:0;">
+                        <div class="ann-featured-meta">
+                            <span class="ann-tag-latest">Latest</span>
+                            @if($firstIsNew)<span class="ann-tag-new">New</span>@endif
+                            <span class="ann-featured-date">{{ $first->published_at->format('d F Y') }} · {{ $first->published_at->diffForHumans() }}</span>
                         </div>
-                        <h2 class="text-xl sm:text-2xl font-extrabold text-white mb-2 tracking-tight leading-snug"
-                            style="transition: color .2s;">
-                            {{ $first->title }}
-                        </h2>
-                        <p class="text-slate-400 text-sm leading-relaxed line-clamp-3">
-                            {{ $first->content }}
-                        </p>
-                        <div class="mt-4 flex items-center gap-1.5 text-indigo-400 text-sm font-bold ann-read-btn">
-                            Read Full Notice
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                            </svg>
-                        </div>
+                        <div class="ann-featured-title">{{ $first->title }}</div>
+                        <p class="ann-featured-preview">{{ Str::limit($first->content, 160) }}</p>
                     </div>
+                </div>
+                <div class="ann-featured-footer">
+                    <span style="font-size:11px;color:#334155;">Official Notice</span>
+                    <span class="ann-read-link">
+                        Read Full Notice
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </span>
                 </div>
             </div>
 
-            {{-- ── Grid of remaining cards ── --}}
+            {{-- ── Card grid ── --}}
             @if($rest->count() > 0)
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    @foreach($rest as $ann)
-                        @php
-                            $isNew = $ann->published_at->diffInDays(now()) <= 3;
-                            $colors = [
-                                0 => '#6366f1',
-                                1 => '#8b5cf6',
-                                2 => '#06b6d4',
-                                3 => '#10b981',
-                                4 => '#f59e0b',
-                                5 => '#ec4899',
-                            ];
-                            $barColor = $colors[$loop->index % count($colors)];
-                        @endphp
-                        <div class="ann-card" wire:click="openAnnouncement({{ $ann->id }})">
-                            <div class="ann-card-bar" style="background:{{ $barColor }};"></div>
-                            <div class="ann-card-body">
-                                <div class="ann-card-meta">
-                                    @if($isNew)
-                                        <span class="ann-badge-new">New</span>
-                                    @endif
-                                    <span class="ann-card-date">{{ $ann->published_at->format('d M Y') }}</span>
-                                </div>
-                                <div class="ann-card-title">{{ $ann->title }}</div>
-                                <p class="ann-card-preview">{{ $ann->content }}</p>
+            <div class="ann-grid">
+                @foreach($rest as $ann)
+                    @php
+                        $isNew    = $ann->published_at->diffInDays(now()) <= 3;
+                        $barColor = $barColors[$loop->index % count($barColors)];
+                    @endphp
+                    <div class="ann-card" wire:click="openAnnouncement({{ $ann->id }})">
+                        <div class="ann-card-bar" style="background:{{ $barColor }};"></div>
+                        <div class="ann-card-body">
+                            <div class="ann-card-meta">
+                                @if($isNew)<span class="ann-tag-new">New</span>@endif
+                                <span class="ann-card-date">{{ $ann->published_at->format('d M Y') }}</span>
                             </div>
-                            <div class="ann-card-footer">
-                                <span class="text-[11px] text-slate-600">{{ $ann->published_at->diffForHumans() }}</span>
-                                <span class="ann-read-btn">
-                                    Read
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/>
-                                    </svg>
-                                </span>
-                            </div>
+                            <div class="ann-card-title">{{ $ann->title }}</div>
+                            <p class="ann-card-preview">{{ $ann->content }}</p>
                         </div>
-                    @endforeach
-                </div>
+                        <div class="ann-card-footer">
+                            <span class="ann-card-time">{{ $ann->published_at->diffForHumans() }}</span>
+                            <span class="ann-card-cta">
+                                Read
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                                </svg>
+                            </span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
             @endif
         @endif
-    </div>
 
-    {{-- ═══════════════════════════════════════════
-         DETAIL MODAL
-    ════════════════════════════════════════════ --}}
+    </div>{{-- /ann-page --}}
+
+    {{-- ── Detail Modal ── --}}
     @if($selectedAnn)
         @php $isNew = $selectedAnn->published_at->diffInDays(now()) <= 3; @endphp
         <div class="ann-modal-backdrop" wire:click.self="closeModal">
             <div class="ann-modal">
-                {{-- ── Top bar ── --}}
-                <div class="ann-modal-top"></div>
-
-                {{-- ── Header ── --}}
+                <div class="ann-modal-bar"></div>
                 <div class="ann-modal-header">
-                    <div class="min-w-0">
-                        <div class="flex flex-wrap items-center gap-2 mb-2">
-                            @if($isNew)
-                                <span class="ann-badge-new">New</span>
-                            @endif
-                            <span class="text-xs text-slate-500 flex items-center gap-1">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                                </svg>
+                    <div style="min-width:0;">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+                            @if($isNew)<span class="ann-tag-new">New</span>@endif
+                            <span style="font-size:11px;color:#64748b;">
                                 {{ $selectedAnn->published_at->format('d F Y, h:i A') }}
+                                · {{ $selectedAnn->published_at->diffForHumans() }}
                             </span>
-                            <span class="text-xs text-slate-600">·</span>
-                            <span class="text-xs text-slate-600">{{ $selectedAnn->published_at->diffForHumans() }}</span>
                         </div>
-                        <h2 class="text-xl font-extrabold text-white leading-tight tracking-tight">
+                        <h2 style="font-size:19px;font-weight:800;color:#f1f5f9;letter-spacing:-.02em;line-height:1.3;">
                             {{ $selectedAnn->title }}
                         </h2>
                     </div>
                     <button wire:click="closeModal" class="ann-modal-close" title="Close">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/>
+                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
                 </div>
-
-                {{-- ── Body ── --}}
                 <div class="ann-modal-body">
-                    <div class="h-px mb-6" style="background:linear-gradient(90deg,rgba(99,102,241,.4),rgba(139,92,246,.2),transparent);"></div>
-                    <p class="text-slate-300 text-base leading-8 whitespace-pre-wrap">{{ $selectedAnn->content }}</p>
+                    <div style="height:1px;background:linear-gradient(90deg,rgba(99,102,241,.45),rgba(139,92,246,.2),transparent);margin-bottom:1.4rem;"></div>
+                    <p style="color:#cbd5e1;font-size:14.5px;line-height:1.85;white-space:pre-wrap;">{{ $selectedAnn->content }}</p>
                 </div>
-
-                {{-- ── Footer ── --}}
-                <div class="px-8 py-4 border-t flex items-center justify-between"
-                    style="border-color:rgba(71,85,105,.25); background:rgba(30,41,59,.4);">
-                    <span class="text-xs text-slate-600">Official Community Notice</span>
+                <div class="ann-modal-footer">
+                    <span style="font-size:11px;color:#334155;">Official Community Notice</span>
                     <button wire:click="closeModal"
-                        class="px-5 py-2 rounded-xl text-sm font-bold text-white transition-all"
-                        style="background:rgba(99,102,241,.2); border:1px solid rgba(99,102,241,.3);"
-                        onmouseover="this.style.background='rgba(99,102,241,.35)'"
-                        onmouseout="this.style.background='rgba(99,102,241,.2)'">
+                        style="padding:7px 18px;border-radius:10px;font-size:12px;font-weight:700;color:#a5b4fc;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.3);cursor:pointer;transition:background .2s;"
+                        onmouseover="this.style.background='rgba(99,102,241,.28)'"
+                        onmouseout="this.style.background='rgba(99,102,241,.15)'">
                         {{ __('app.close') }}
                     </button>
                 </div>

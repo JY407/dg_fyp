@@ -1,89 +1,79 @@
 <?php
 
 use Livewire\Volt\Component;
-use App\Models\Announcement;
 use App\Models\UserNotification;
 
 new class extends Component {
     public bool $open = false;
 
+    // ── Computed: unread count ──────────────────────────────────────────────
     public function getUnreadCountProperty(): int
     {
         if (!auth()->check()) return 0;
-        $user = auth()->user();
-
-        // Unread personal notifications
-        $personal = UserNotification::where('user_id', $user->id)
+        return UserNotification::where('user_id', auth()->id())
             ->whereNull('read_at')
             ->count();
-
-        // New announcements since user last read them
-        $readAt = $user->notifications_read_at;
-        $announcements = Announcement::where('published_at', '<=', now())
-            ->when($readAt, fn($q) => $q->where('published_at', '>', $readAt))
-            ->count();
-
-        return $personal + $announcements;
     }
 
+    // ── Computed: items list ────────────────────────────────────────────────
     public function getItemsProperty(): array
     {
-        $user = auth()->user();
-        $items = collect();
+        if (!auth()->check()) return [];
 
-        // Personal notifications (unread first, then recent)
-        $personal = UserNotification::where('user_id', $user->id)
-            ->orderByRaw('read_at IS NOT NULL')
+        return UserNotification::where('user_id', auth()->id())
+            ->orderByRaw('read_at IS NOT NULL')   // unread first
             ->orderBy('created_at', 'desc')
-            ->limit(4)
+            ->limit(8)
             ->get()
             ->map(fn($n) => [
-                'type'    => $n->type,
-                'title'   => $n->title,
-                'body'    => $n->message,
-                'time'    => $n->created_at->diffForHumans(),
-                'isNew'   => is_null($n->read_at),
-                'color'   => in_array($n->type, ['account_approved']) ? '#10b981' : '#ef4444',
-                'iconType'=> 'user',
-            ]);
-        $items = $items->merge($personal);
-
-        // Latest announcements
-        $readAt = $user->notifications_read_at;
-        $anns = Announcement::where('published_at', '<=', now())
-            ->orderBy('published_at', 'desc')
-            ->limit(3)
-            ->get()
-            ->map(fn($a) => [
-                'type'    => 'announcement',
-                'title'   => $a->title,
-                'body'    => $a->content,
-                'time'    => $a->published_at->diffForHumans(),
-                'isNew'   => $readAt ? $a->published_at->gt($readAt) : true,
-                'color'   => '#6366f1',
-                'iconType'=> 'bell',
-            ]);
-        $items = $items->merge($anns);
-
-        return $items->sortByDesc('isNew')->values()->take(6)->all();
+                'type'     => $n->type,
+                'title'    => $n->title,
+                'body'     => $n->message,
+                'time'     => $n->created_at->diffForHumans(),
+                'isNew'    => is_null($n->read_at),
+                'color'    => $this->colorFor($n->type),
+                'iconType' => $this->iconFor($n->type),
+            ])
+            ->all();
     }
 
+    // ── Toggle open / close ─────────────────────────────────────────────────
     public function toggle(): void
     {
         $this->open = !$this->open;
         if ($this->open && auth()->check()) {
-            // Mark all personal notifications as read
             UserNotification::where('user_id', auth()->id())
                 ->whereNull('read_at')
                 ->update(['read_at' => now()]);
-            // Mark announcements read timestamp
-            auth()->user()->update(['notifications_read_at' => now()]);
         }
     }
 
     public function close(): void
     {
         $this->open = false;
+    }
+
+    // ── Helpers ─────────────────────────────────────────────────────────────
+    private function colorFor(string $type): string
+    {
+        return match($type) {
+            'announcement'   => '#6366f1',   // indigo
+            'event_new'      => '#10b981',   // emerald
+            'event_updated'  => '#f59e0b',   // amber
+            'event_approved' => '#10b981',   // emerald
+            'account_approved' => '#10b981',
+            default          => '#8b5cf6',   // purple
+        };
+    }
+
+    private function iconFor(string $type): string
+    {
+        return match($type) {
+            'announcement'               => 'megaphone',
+            'event_new', 'event_updated',
+            'event_approved'             => 'calendar',
+            default                      => 'user',
+        };
     }
 }; ?>
 
@@ -140,23 +130,33 @@ new class extends Component {
         <ul class="max-h-80 overflow-y-auto divide-y divide-slate-700/30">
             @forelse($this->items as $item)
                 <li>
-                    @if($item['type'] === 'announcement')
-                        <a href="{{ route('announcements') }}" class="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-white/5">
-                    @else
-                        <div class="flex items-start gap-3 px-4 py-3 {{ $item['isNew'] ? 'bg-white/3' : '' }}">
-                    @endif
+                    @php
+                        $isEventType = in_array($item['type'], ['event_new','event_updated','event_approved']);
+                        $linkTarget  = $isEventType ? route('events') : route('announcements');
+                    @endphp
+                    <a href="{{ $linkTarget }}"
+                        class="flex items-start gap-3 px-4 py-3 transition-colors hover:bg-white/5 {{ $item['isNew'] ? 'bg-white/[0.03]' : '' }}">
+
                         {{-- Icon --}}
                         <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5"
                             style="background:{{ $item['color'] }}18; border:1px solid {{ $item['color'] }}35;">
-                            @if($item['iconType'] === 'user')
+                            @if($item['iconType'] === 'calendar')
+                                {{-- Calendar icon for events --}}
+                                <svg class="w-4 h-4" style="color:{{ $item['color'] }};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            @elseif($item['iconType'] === 'megaphone')
+                                {{-- Megaphone icon for announcements --}}
+                                <svg class="w-4 h-4" style="color:{{ $item['color'] }};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+                                </svg>
+                            @else
+                                {{-- User icon for account notifications --}}
                                 <svg class="w-4 h-4" style="color:{{ $item['color'] }};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                                </svg>
-                            @else
-                                <svg class="w-4 h-4" style="color:{{ $item['color'] }};" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                                 </svg>
                             @endif
                         </div>
@@ -172,11 +172,7 @@ new class extends Component {
                             <p class="text-xs text-slate-500 line-clamp-2 mt-0.5 leading-relaxed">{{ $item['body'] }}</p>
                             <p class="text-[10px] text-slate-600 mt-1">{{ $item['time'] }}</p>
                         </div>
-                    @if($item['type'] === 'announcement')
-                        </a>
-                    @else
-                        </div>
-                    @endif
+                    </a>
                 </li>
             @empty
                 <li class="px-4 py-10 text-center">

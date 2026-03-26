@@ -5,6 +5,7 @@ use Livewire\Attributes\Layout;
 use Livewire\WithFileUploads;
 use Livewire\WithPagination;
 use App\Models\Event;
+use App\Models\UserNotification;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -114,9 +115,23 @@ new #[Layout('layouts.admin')] class extends Component {
         if ($this->editingId) {
             Event::findOrFail($this->editingId)->update($data);
             session()->flash('success', 'Event updated successfully.');
+            // Push update notification to all residents
+            UserNotification::pushToAll(
+                'event_updated',
+                '📅 Event Updated: ' . $this->title,
+                "The event \"{$this->title}\" on " . \Carbon\Carbon::parse($this->event_date)->format('d M Y') . " has been updated."
+            );
         } else {
             Event::create(array_merge($data, ['user_id' => auth()->id()]));
             session()->flash('success', 'Event created successfully.');
+            // Push new event notification to all residents (only if approved)
+            if ($this->status === 'approved') {
+                UserNotification::pushToAll(
+                    'event_new',
+                    '🎉 New Event: ' . $this->title,
+                    "A new community event \"{$this->title}\" is happening on " . \Carbon\Carbon::parse($this->event_date)->format('d M Y') . " at {$this->location}."
+                );
+            }
         }
 
         $this->resetForm();
@@ -144,8 +159,17 @@ new #[Layout('layouts.admin')] class extends Component {
     // ─── Quick status change ─────────────────────────────────────────────────
     public function setStatus(int $id, string $status): void
     {
-        Event::findOrFail($id)->update(['status' => $status]);
+        $event = Event::findOrFail($id);
+        $event->update(['status' => $status]);
         session()->flash('success', 'Event status updated.');
+
+        if ($status === 'approved') {
+            UserNotification::pushToAll(
+                'event_approved',
+                '✅ Event Approved: ' . $event->title,
+                "The community event \"{$event->title}\" on " . $event->event_date->format('d M Y') . " at {$event->location} is now approved."
+            );
+        }
     }
 
     private function resetForm(): void

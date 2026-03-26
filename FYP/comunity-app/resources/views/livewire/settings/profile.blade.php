@@ -1,183 +1,362 @@
-<div class="min-h-screen bg-[#131520] font-sans relative overflow-hidden" style="padding: 120px 0 80px;">
+<div style="background:#0f172a; min-height:100vh;">
+    @push('styles')
+    <style>
+        /* ── Layout ── */
+        .prof-page { max-width: 1100px; margin: 0 auto; padding: 2rem; }
 
-    <div class="container mx-auto px-6 relative z-10 max-w-6xl">
-        <h1 class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-teal-400 mb-2">My Profile</h1>
-        <p class="text-gray-400 text-lg mb-10">Manage your account settings and family members.</p>
+        /* ── Shared card base ── */
+        .prof-card {
+            background: rgba(30,41,59,.65);
+            border: 1px solid rgba(71,85,105,.3);
+            border-radius: 18px;
+            overflow: hidden;
+        }
+        .prof-card-header {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid rgba(71,85,105,.2);
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(15,23,42,.4);
+        }
+        .prof-card-header-icon {
+            width: 34px; height: 34px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .prof-card-header h3 { font-size: 15px; font-weight: 800; color: #e2e8f0; letter-spacing:-.01em; }
+        .prof-card-body { padding: 1.5rem; }
 
+        /* ── Input ── */
+        .prof-label {
+            display: block; font-size: 10px; font-weight: 800;
+            letter-spacing: .08em; text-transform: uppercase; color: #475569;
+            margin-bottom: 6px;
+        }
+        .prof-input {
+            width: 100%; padding: 10px 14px;
+            background: rgba(15,23,42,.7); border: 1px solid rgba(71,85,105,.4);
+            border-radius: 10px; color: #e2e8f0; font-size: 14px; outline: none;
+            transition: border-color .18s, box-shadow .18s;
+        }
+        .prof-input:focus {
+            border-color: rgba(99,102,241,.55);
+            box-shadow: 0 0 0 3px rgba(99,102,241,.1);
+        }
+        .prof-input::placeholder { color: #334155; }
+
+        /* ── Save button ── */
+        .prof-save-btn {
+            display: inline-flex; align-items: center; gap: 7px;
+            padding: 9px 20px; border-radius: 10px; font-size: 13px; font-weight: 700;
+            color: #fff; cursor: pointer; border: none;
+            background: linear-gradient(135deg,#6366f1,#8b5cf6);
+            box-shadow: 0 4px 14px rgba(99,102,241,.32);
+            transition: transform .18s, box-shadow .18s;
+        }
+        .prof-save-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(99,102,241,.42); }
+
+        /* ── Avatar ── */
+        .prof-avatar-wrap { position: relative; display: inline-block; }
+        .prof-avatar {
+            width: 96px; height: 96px; border-radius: 50%;
+            overflow: hidden; border: 3px solid rgba(99,102,241,.4);
+            background: rgba(30,41,59,.8);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 32px; font-weight: 800; color: #a5b4fc;
+            box-shadow: 0 0 0 3px rgba(99,102,241,.15);
+        }
+        .prof-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .prof-avatar-overlay {
+            position: absolute; inset: 0; border-radius: 50%;
+            background: rgba(0,0,0,.55); backdrop-filter: blur(3px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; cursor: pointer;
+            transition: opacity .2s;
+        }
+        .prof-avatar-wrap:hover .prof-avatar-overlay { opacity: 1; }
+
+        /* ── Role badge ── */
+        .prof-role-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 8px; font-size: 10px;
+            font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+        }
+
+        /* ── Status badges ── */
+        .badge-approved { background:rgba(16,185,129,.12); color:#34d399; border:1px solid rgba(16,185,129,.25); }
+        .badge-pending  { background:rgba(245,158,11,.12);  color:#fbbf24; border:1px solid rgba(245,158,11,.25); }
+        .badge-rejected { background:rgba(239,68,68,.12);   color:#f87171; border:1px solid rgba(239,68,68,.25); }
+
+        /* ── Danger zone ── */
+        .prof-danger {
+            background: rgba(30,18,22,.7); border: 1px solid rgba(239,68,68,.18); border-radius: 18px;
+        }
+        .prof-danger-header {
+            padding: 1.25rem 1.5rem; border-bottom: 1px solid rgba(239,68,68,.15);
+            display: flex; align-items: center; gap: 10px;
+        }
+        .prof-danger-header h3 { font-size: 15px; font-weight: 800; color: #f87171; }
+        .prof-danger-body { padding: 1.5rem; }
+    </style>
+    @endpush
+
+    <div class="prof-page">
+
+        {{-- ── Page heading ── --}}
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.75rem;">
+            <div style="width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(99,102,241,.35);">
+                <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+            </div>
+            <div>
+                <h1 style="font-size:20px;font-weight:800;color:#f1f5f9;letter-spacing:-.02em;line-height:1;">My Profile</h1>
+                <p style="font-size:12px;color:#475569;margin-top:2px;">Manage your account settings and family members.</p>
+            </div>
+        </div>
+
+        {{-- ── Profile form ── --}}
         <form wire:submit="updateProfileInformation">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Photo & Role -->
-                <!-- Photo & Role -->
-                <div class="md:col-span-1">
-                    <div class="bg-[#1e2133] rounded-[24px] p-8 text-center pb-10">
-                        <div class="relative inline-block mb-6">
-                            <!-- Avatar Ring -->
-                            <div class="absolute inset-[-4px] rounded-full bg-gradient-to-b from-[#4bc0c8] to-[#2c3e50] opacity-80"></div>
-                            
-                            <div class="relative w-32 h-32 rounded-full overflow-hidden mx-auto bg-[#131520] flex items-center justify-center text-4xl font-bold text-white border-4 border-[#1e2133]">
+            <div style="display:grid;grid-template-columns:280px 1fr;gap:1.25rem;align-items:start;margin-bottom:1.25rem;">
+
+                {{-- Left: Avatar card --}}
+                <div class="prof-card">
+                    <div class="prof-card-header">
+                        <div class="prof-card-header-icon" style="background:rgba(99,102,241,.15);">
+                            <svg width="16" height="16" fill="none" stroke="#818cf8" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                        <h3>Account</h3>
+                    </div>
+                    <div class="prof-card-body" style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:14px;">
+                        {{-- Avatar --}}
+                        <div class="prof-avatar-wrap">
+                            <div class="prof-avatar">
                                 @if ($photo)
-                                    <img src="{{ $photo->temporaryUrl() }}" class="w-full h-full object-cover">
+                                    <img src="{{ $photo->temporaryUrl() }}">
                                 @elseif (auth()->user()->profile_photo_path)
-                                    <img src="{{ asset('storage/' . auth()->user()->profile_photo_path) }}" class="w-full h-full object-cover">
+                                    <img src="{{ asset('storage/' . auth()->user()->profile_photo_path) }}">
                                 @else
                                     {{ substr(auth()->user()->name, 0, 1) }}
                                 @endif
                             </div>
-                            <!-- Image Overlay Upload Button -->
-                            <label for="photo" class="absolute inset-[4px] flex items-center justify-center bg-black/60 rounded-full opacity-0 hover:opacity-100 cursor-pointer transition-all duration-300 backdrop-blur-sm z-20">
-                                <span class="text-sm font-bold text-white flex flex-col items-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                                    Update
-                                </span>
+                            <label for="photo" class="prof-avatar-overlay">
+                                <svg width="18" height="18" fill="none" stroke="white" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+                                </svg>
                             </label>
                             <input wire:model="photo" id="photo" type="file" class="hidden" accept="image/*">
                         </div>
-                        
-                        <h3 class="text-2xl font-bold text-white mb-3">{{ auth()->user()->name }}</h3>
-                        <div class="inline-block px-4 py-1 rounded-full text-[10px] font-black tracking-wider bg-[#32345e] text-[#8e95e8] uppercase">
-                            {{ ucfirst(auth()->user()->user_type) }}
+
+                        {{-- Name & role --}}
+                        <div>
+                            <div style="font-size:16px;font-weight:800;color:#f1f5f9;margin-bottom:6px;">{{ auth()->user()->name }}</div>
+                            <span class="prof-role-badge" style="background:rgba(99,102,241,.15);color:#a5b4fc;border:1px solid rgba(99,102,241,.25);">
+                                <span style="width:5px;height:5px;border-radius:50%;background:#818cf8;display:inline-block;"></span>
+                                {{ ucfirst(auth()->user()->user_type) }}
+                            </span>
+                        </div>
+
+                        {{-- Address info (read-only display) --}}
+                        @if(auth()->user()->block || auth()->user()->unit_number)
+                        <div style="width:100%;background:rgba(15,23,42,.5);border:1px solid rgba(71,85,105,.25);border-radius:10px;padding:10px 14px;text-align:left;">
+                            <div style="font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px;">Residence</div>
+                            <div style="font-size:13px;color:#94a3b8;">
+                                @if(auth()->user()->block)Block {{ auth()->user()->block }}@endif
+                                @if(auth()->user()->unit_number), Unit {{ auth()->user()->unit_number }}@endif
+                            </div>
+                            @if(auth()->user()->street)
+                            <div style="font-size:12px;color:#475569;margin-top:2px;">{{ auth()->user()->street }}</div>
+                            @endif
+                        </div>
+                        @endif
+
+                        {{-- Email --}}
+                        <div style="width:100%;background:rgba(15,23,42,.5);border:1px solid rgba(71,85,105,.25);border-radius:10px;padding:10px 14px;text-align:left;">
+                            <div style="font-size:10px;font-weight:700;color:#334155;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px;">Email</div>
+                            <div style="font-size:13px;color:#94a3b8;word-break:break-all;">{{ auth()->user()->email }}</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Personal Info -->
-                <div class="md:col-span-2">
-                    <div class="bg-[#1e2133] rounded-[24px] p-8 pb-10">
-                        <div class="flex items-center gap-4 mb-8">
-                            <div class="w-12 h-12 rounded-full bg-[#2f3252] flex items-center justify-center text-[#878edf]">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            </div>
-                            <h3 class="text-[28px] font-bold text-white">Personal Details</h3>
+                {{-- Right: Personal info fields --}}
+                <div class="prof-card">
+                    <div class="prof-card-header">
+                        <div class="prof-card-header-icon" style="background:rgba(99,102,241,.15);">
+                            <svg width="16" height="16" fill="none" stroke="#818cf8" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
                         </div>
-                        
-                        <div class="space-y-5">
-                            <div class="max-w-[800px]">
-                                <label class="block text-[11px] font-black uppercase tracking-widest text-[#737a9c] mb-1.5 ml-5">Full Name</label>
-                                <input wire:model="name" type="text" class="w-full bg-[#0f111a] border-none rounded-full px-5 py-3.5 text-white text-[15px] focus:ring-2 focus:ring-[#4d4cea] focus:outline-none transition-colors">
-                                @error('name') <span class="text-red-400 text-xs mt-1 block font-medium ml-5">{{ $message }}</span> @enderror
+                        <h3>Edit Personal Details</h3>
+                    </div>
+                    <div class="prof-card-body">
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                            <div style="grid-column:span 2;">
+                                <label class="prof-label">Full Name</label>
+                                <input wire:model="name" type="text" class="prof-input" placeholder="Your full name">
+                                @error('name') <span style="color:#f87171;font-size:12px;margin-top:4px;display:block;">{{ $message }}</span> @enderror
                             </div>
-                            <div class="max-w-[800px]">
-                                <label class="block text-[11px] font-black uppercase tracking-widest text-[#737a9c] mb-1.5 ml-5">Email Address</label>
-                                <input wire:model="email" type="email" class="w-full bg-[#0f111a] border-none rounded-full px-5 py-3.5 text-white text-[15px] focus:ring-2 focus:ring-[#4d4cea] focus:outline-none transition-colors">
-                                @error('email') <span class="text-red-400 text-xs mt-1 block font-medium ml-5">{{ $message }}</span> @enderror
+                            <div style="grid-column:span 2;">
+                                <label class="prof-label">Email Address</label>
+                                <input wire:model="email" type="email" class="prof-input" placeholder="your@email.com">
+                                @error('email') <span style="color:#f87171;font-size:12px;margin-top:4px;display:block;">{{ $message }}</span> @enderror
                             </div>
+                            <div>
+                                <label class="prof-label">Block</label>
+                                <input wire:model="block" type="text" class="prof-input" placeholder="e.g. A">
+                            </div>
+                            <div>
+                                <label class="prof-label">Unit Number</label>
+                                <input wire:model="unit_number" type="text" class="prof-input" placeholder="e.g. 12-3">
+                            </div>
+                            <div style="grid-column:span 2;">
+                                <label class="prof-label">Street</label>
+                                <input wire:model="street" type="text" class="prof-input" placeholder="Street name">
+                            </div>
+                        </div>
 
-                            <div class="grid grid-cols-1 md:grid-cols-10 gap-x-6 gap-y-5 max-w-[800px]">
-                                <div class="md:col-span-4">
-                                    <label class="block text-[11px] font-black uppercase tracking-widest text-[#737a9c] mb-1.5 ml-5">Block</label>
-                                    <input wire:model="block" type="text" class="w-full bg-[#0f111a] border-none rounded-full px-5 py-3.5 text-white text-[15px] focus:ring-2 focus:ring-[#4d4cea] focus:outline-none transition-colors">
-                                </div>
-                                <div class="md:col-span-3">
-                                    <label class="block text-[11px] font-black uppercase tracking-widest text-[#737a9c] mb-1.5 ml-5">Unit Number</label>
-                                    <input wire:model="unit_number" type="text" class="w-full bg-[#0f111a] border-none rounded-full px-5 py-3.5 text-white text-[15px] focus:ring-2 focus:ring-[#4d4cea] focus:outline-none transition-colors">
-                                </div>
-                                <div class="md:col-span-3">
-                                    <label class="block text-[11px] font-black uppercase tracking-widest text-[#737a9c] mb-1.5 ml-5">Street</label>
-                                    <input wire:model="street" type="text" class="w-full bg-[#0f111a] border-none rounded-full px-5 py-3.5 text-white text-[15px] focus:ring-2 focus:ring-[#4d4cea] focus:outline-none transition-colors">
-                                </div>
-                            </div>
-
-                            <div class="pt-4 flex items-center gap-4">
-                                <button type="submit" class="bg-[#4d4872] hover:bg-[#3d385a] text-white font-bold py-2.5 px-6 rounded-full transition-colors flex items-center gap-2 text-sm shadow-md min-w-[160px] justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-                                    Save Changes
-                                </button>
-                                <x-action-message on="profile-updated" class="text-green-400 font-medium bg-[#14261f] px-4 py-2 rounded-full border border-green-500/20 flex items-center gap-2 text-sm">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                                </x-action-message>
-                            </div>
+                        <div style="display:flex;align-items:center;gap:12px;padding-top:.25rem;border-top:1px solid rgba(71,85,105,.2);margin-top:.25rem;">
+                            <button type="submit" class="prof-save-btn">
+                                <svg width="14" height="14" fill="none" stroke="white" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Save Changes
+                            </button>
+                            <x-action-message on="profile-updated"
+                                style="font-size:12px;font-weight:700;color:#34d399;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);padding:5px 14px;border-radius:8px;display:flex;align-items:center;gap:6px;">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Saved!
+                            </x-action-message>
                         </div>
                     </div>
                 </div>
             </div>
         </form>
 
-        <!-- Family Members -->
-        <h2 class="text-[32px] font-extrabold mt-16 mb-8 text-white flex items-center gap-6">
-            Family Hub
-            <div class="h-[1px] flex-1 bg-[#26293d]"></div>
-        </h2>
-        
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-8 mb-12">
-            <!-- Register Form -->
-            <div class="xl:col-span-1">
-                <div class="bg-[#1e2133] rounded-[24px] p-8 pb-10 h-full">
-                    <div class="flex items-center gap-3 mb-6">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" class="text-[#878edf]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                        <h3 class="text-[28px] font-bold text-white">Add Member</h3>
+        {{-- ── Family Hub ── --}}
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;margin-top:.5rem;">
+            <div style="width:38px;height:38px;border-radius:11px;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.25);display:flex;align-items:center;justify-content:center;">
+                <svg width="18" height="18" fill="none" stroke="#34d399" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 style="font-size:16px;font-weight:800;color:#f1f5f9;letter-spacing:-.01em;line-height:1;">Family Hub</h2>
+                <p style="font-size:12px;color:#475569;margin-top:2px;">Manage registered family members under your household.</p>
+            </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:280px 1fr;gap:1.25rem;align-items:start;margin-bottom:1.25rem;">
+
+            {{-- Add Member form --}}
+            <div class="prof-card">
+                <div class="prof-card-header">
+                    <div class="prof-card-header-icon" style="background:rgba(16,185,129,.12);">
+                        <svg width="16" height="16" fill="none" stroke="#34d399" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                        </svg>
+                    </div>
+                    <h3>Add Member</h3>
+                </div>
+                <div class="prof-card-body">
+                    {{-- Info banner --}}
+                    <div style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:10px;margin-bottom:1.1rem;">
+                        <svg width="14" height="14" fill="none" stroke="#fbbf24" stroke-width="2" viewBox="0 0 24 24" style="shrink:0;margin-top:1px;">
+                            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                        </svg>
+                        <p style="font-size:12px;color:#d97706;">New accounts require admin approval before activation.</p>
                     </div>
 
-                    <div class="bg-[#181a28] rounded-xl p-4 mb-8 flex items-start gap-3 border border-[#26293d]">
-                       <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" class="text-yellow-500 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                       <p class="text-sm text-[#c8cbd9]">Accounts need admin approval.</p>
-                    </div>
-                    
-                    <form wire:submit="registerFamilyMember" class="space-y-6">
+                    <form wire:submit="registerFamilyMember" style="display:flex;flex-direction:column;gap:.85rem;">
                         <div>
-                            <label class="block text-[11px] font-black uppercase tracking-widest text-[#737a9c] mb-1.5 ml-5">Full Name</label>
-                            <input wire:model="newFamilyName" type="text" class="w-full bg-[#0f111a] border-none rounded-full px-5 py-3.5 text-white text-[15px] focus:ring-2 focus:ring-[#4d4cea] focus:outline-none transition-colors">
+                            <label class="prof-label">Full Name</label>
+                            <input wire:model="newFamilyName" type="text" class="prof-input" placeholder="Member's name">
+                            @error('newFamilyName') <span style="color:#f87171;font-size:11px;margin-top:3px;display:block;">{{ $message }}</span> @enderror
                         </div>
                         <div>
-                            <label class="block text-[11px] font-black uppercase tracking-widest text-[#737a9c] mb-1.5 ml-5">Email Address</label>
-                            <input wire:model="newFamilyEmail" type="email" class="w-full bg-[#0f111a] border-none rounded-full px-5 py-3.5 text-white text-[15px] focus:ring-2 focus:ring-[#4d4cea] focus:outline-none transition-colors">
+                            <label class="prof-label">Email</label>
+                            <input wire:model="newFamilyEmail" type="email" class="prof-input" placeholder="member@email.com">
+                            @error('newFamilyEmail') <span style="color:#f87171;font-size:11px;margin-top:3px;display:block;">{{ $message }}</span> @enderror
                         </div>
                         <div>
-                            <label class="block text-[11px] font-black uppercase tracking-widest text-[#737a9c] mb-1.5 ml-5">Password</label>
-                            <input wire:model="newFamilyPassword" type="password" class="w-full bg-[#0f111a] border-none rounded-full px-5 py-3.5 text-white text-[15px] focus:ring-2 focus:ring-[#4d4cea] focus:outline-none transition-colors">
+                            <label class="prof-label">Password</label>
+                            <input wire:model="newFamilyPassword" type="password" class="prof-input" placeholder="Min. 8 characters">
+                            @error('newFamilyPassword') <span style="color:#f87171;font-size:11px;margin-top:3px;display:block;">{{ $message }}</span> @enderror
                         </div>
-                        
-                        <button type="submit" class="w-full bg-[#5d5cfc] hover:bg-[#4d4cea] text-white font-bold py-3.5 px-6 rounded-full transition-colors mt-8 text-sm shadow-md shadow-[#5d5cfc]/20 flex items-center justify-center min-w-[160px]">
+                        <button type="submit"
+                            style="width:100%;padding:10px;border-radius:10px;font-size:13px;font-weight:700;color:#fff;border:none;cursor:pointer;background:linear-gradient(135deg,#10b981,#059669);box-shadow:0 4px 14px rgba(16,185,129,.25);transition:transform .18s,box-shadow .18s;margin-top:.2rem;"
+                            onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
                             Register Account
                         </button>
-                        <x-action-message on="family-member-added" class="text-green-400 text-sm font-medium text-center block bg-[#14261f] py-2 rounded-full border border-green-500/20 mt-4" />
+                        <x-action-message on="family-member-added"
+                            style="font-size:12px;font-weight:700;color:#34d399;text-align:center;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);padding:6px;border-radius:8px;">
+                            Member registered successfully!
+                        </x-action-message>
                     </form>
                 </div>
             </div>
 
-            <!-- List -->
-            <div class="xl:col-span-2">
-                <div class="bg-[#1e2133] rounded-[24px] p-8 pb-10 min-h-full">
-                    <h3 class="text-[28px] font-bold text-white mb-8 flex items-center gap-3 border-b border-[#26293d] pb-6">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" class="text-[#878edf]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                        Registered Accounts
-                    </h3>
-                    
+            {{-- Member list --}}
+            <div class="prof-card">
+                <div class="prof-card-header">
+                    <div class="prof-card-header-icon" style="background:rgba(99,102,241,.12);">
+                        <svg width="16" height="16" fill="none" stroke="#818cf8" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                    <h3>Registered Members</h3>
+                    @if($familyMembers->count() > 0)
+                        <span style="margin-left:auto;font-size:10px;font-weight:800;color:#818cf8;background:rgba(99,102,241,.15);border:1px solid rgba(99,102,241,.25);padding:3px 10px;border-radius:8px;">
+                            {{ $familyMembers->count() }} {{ Str::plural('member', $familyMembers->count()) }}
+                        </span>
+                    @endif
+                </div>
+                <div class="prof-card-body">
                     @if($familyMembers->isEmpty())
-                        <div class="text-[#737a9c] text-sm text-center py-12 bg-[#181a28] rounded-2xl border border-[#26293d] border-dashed border-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" class="mx-auto mb-3 text-[#393e5e]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
-                            No family members found.
+                        <div style="text-align:center;padding:2.5rem 1rem;">
+                            <div style="width:48px;height:48px;border-radius:14px;background:rgba(71,85,105,.12);border:1px dashed rgba(71,85,105,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;">
+                                <svg width="22" height="22" fill="none" stroke="#475569" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                </svg>
+                            </div>
+                            <p style="font-size:14px;font-weight:700;color:#475569;">No family members yet</p>
+                            <p style="font-size:12px;color:#334155;margin-top:4px;">Register a member using the form on the left.</p>
                         </div>
                     @else
-                        <div class="space-y-4">
+                        <div style="display:flex;flex-direction:column;gap:.65rem;">
                             @foreach($familyMembers as $member)
-                                <div class="flex items-center justify-between p-5 bg-[#181a28] hover:bg-[#1a1c2b] rounded-2xl border border-[#26293d] transition-colors">
-                                    <div class="flex items-center gap-5">
-                                        <div class="w-12 h-12 rounded-full bg-[#2f3252] text-[#878edf] flex items-center justify-center font-bold text-lg">
-                                            {{ substr($member->name, 0, 1) }}
-                                        </div>
-                                        <div>
-                                            <div class="text-white text-base font-bold mb-0.5">{{ $member->name }}</div>
-                                            <div class="text-[#737a9c] text-sm flex items-center gap-1.5">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                                                {{ $member->email }}
-                                            </div>
-                                        </div>
+                                @php
+                                    $init = strtoupper(substr($member->name, 0, 1));
+                                    $colors = ['#6366f1','#8b5cf6','#06b6d4','#10b981','#f59e0b','#ec4899'];
+                                    $color  = $colors[$loop->index % count($colors)];
+                                @endphp
+                                <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(15,23,42,.5);border:1px solid rgba(71,85,105,.2);border-radius:12px;transition:border-color .18s;"
+                                    onmouseover="this.style.borderColor='rgba(99,102,241,.35)'"
+                                    onmouseout="this.style.borderColor='rgba(71,85,105,.2)'">
+                                    {{-- Avatar --}}
+                                    <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;flex-shrink:0;background:{{ $color }}33;border:2px solid {{ $color }}55;">
+                                        {{ $init }}
                                     </div>
-                                    <div>
-                                        @if($member->status === 'approved')
-                                            <span class="text-[11px] font-black tracking-wider text-[#4ade80] bg-[#1a2f24] border border-[#22c55e]/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 uppercase">
-                                                <div class="w-1.5 h-1.5 rounded-full bg-[#4ade80] animate-pulse"></div> Active
-                                            </span>
-                                        @elseif($member->status === 'rejected')
-                                            <span class="text-[11px] font-black tracking-wider text-[#f87171] bg-[#361f22] border border-[#ef4444]/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 uppercase">
-                                                <div class="w-1.5 h-1.5 rounded-full bg-[#f87171]"></div> Rejected
-                                            </span>
-                                        @else
-                                            <span class="text-[11px] font-black tracking-wider text-[#facc15] bg-[#332e18] border border-[#eab308]/30 px-3 py-1.5 rounded-full flex items-center gap-1.5 uppercase">
-                                                <div class="w-1.5 h-1.5 rounded-full bg-[#facc15] animate-pulse"></div> Pending
-                                            </span>
-                                        @endif
+                                    {{-- Info --}}
+                                    <div style="flex:1;min-width:0;">
+                                        <div style="font-size:14px;font-weight:700;color:#e2e8f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $member->name }}</div>
+                                        <div style="font-size:12px;color:#475569;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $member->email }}</div>
                                     </div>
+                                    {{-- Status --}}
+                                    @if($member->status === 'approved')
+                                        <span class="prof-role-badge badge-approved">
+                                            <span style="width:5px;height:5px;border-radius:50%;background:#34d399;animation:pulse 2s infinite;display:inline-block;"></span>
+                                            Active
+                                        </span>
+                                    @elseif($member->status === 'rejected')
+                                        <span class="prof-role-badge badge-rejected">Rejected</span>
+                                    @else
+                                        <span class="prof-role-badge badge-pending">
+                                            <span style="width:5px;height:5px;border-radius:50%;background:#fbbf24;animation:pulse 2s infinite;display:inline-block;"></span>
+                                            Pending
+                                        </span>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
@@ -186,19 +365,26 @@
             </div>
         </div>
 
-        <!-- Delete Account -->
-        <div class="bg-[#231b25] rounded-[24px] border border-[#3d232c] p-8 pb-10 mt-8 group transition-colors hover:border-[#522b37]">
-            <div class="relative z-10">
-                <h3 class="text-[28px] font-bold text-[#f87171] mb-3 flex items-center gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 3 18 18"/><path d="M4 4v16c0 1.1.9 2 2 2h12c.5 0 1-.2 1.4-.5"/><path d="M20 16V4c0-1.1-.9-2-2-2H8c-.5 0-1 .2-1.4.5"/></svg>
-                    Danger Zone
-                </h3>
-                <div class="text-[#c8cbd9] text-sm mb-8 flex items-start gap-3 max-w-2xl bg-[#1e171f] p-4 rounded-xl border border-[#3d232c]">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" class="text-red-500 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                    Permanently delete your account and all associated data. This action is not reversible.
+        {{-- ── Danger Zone ── --}}
+        <div class="prof-danger">
+            <div class="prof-danger-header">
+                <div style="width:34px;height:34px;border-radius:10px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;">
+                    <svg width="16" height="16" fill="none" stroke="#f87171" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"/>
+                    </svg>
+                </div>
+                <h3>Danger Zone</h3>
+            </div>
+            <div class="prof-danger-body">
+                <div style="display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.15);border-radius:10px;margin-bottom:1.1rem;max-width:520px;">
+                    <svg width="14" height="14" fill="none" stroke="#f87171" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px;">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+                    </svg>
+                    <p style="font-size:12px;color:#fca5a5;">Permanently deletes your account and all associated data. <strong>This cannot be undone.</strong></p>
                 </div>
                 <livewire:settings.delete-user-form />
             </div>
         </div>
-    </div>
+
+    </div>{{-- /prof-page --}}
 </div>

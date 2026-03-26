@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use App\Models\Announcement;
+use App\Models\UserNotification;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 
@@ -64,6 +65,15 @@ new #[Layout('layouts.admin')] class extends Component {
                 'content'      => $this->content,
                 'published_at' => $this->published_at,
             ]
+        );
+
+        // Push a real notification to all active residents
+        $action = $this->isEditing ? 'updated' : 'posted';
+        $snippet = \Illuminate\Support\Str::limit($this->content, 80);
+        UserNotification::pushToAll(
+            'announcement',
+            '📢 ' . $this->title,
+            "Admin has {$action} an announcement: {$snippet}"
         );
 
         $this->closeModal();
