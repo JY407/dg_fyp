@@ -18,6 +18,7 @@ new #[Layout('layouts.app')] class extends Component {
     public $image;
 
     public $showCreateModal = false;
+    public $showMyEventsModal = false;
     
     // Calendar properties
     public $currentMonth;
@@ -36,6 +37,7 @@ new #[Layout('layouts.app')] class extends Component {
         return [
             'approvedEvents' => Event::where('status', 'approved')->orderBy('event_date', 'asc')->get(),
             'joinedEvents' => auth()->check() ? auth()->user()->joinedEvents : collect([]),
+            'mySubmittedEvents' => auth()->check() ? auth()->user()->events()->orderBy('created_at', 'desc')->get() : collect([]),
         ];
     }
     
@@ -181,7 +183,11 @@ new #[Layout('layouts.app')] class extends Component {
                 {{ __('app.events_subtitle') }}
             </p>
             @auth
-                <div class="mt-8 flex justify-center">
+                <div class="mt-8 flex justify-center gap-4">
+                    <button wire:click="$toggle('showMyEventsModal')" class="bg-gray-800/50 text-gray-300 hover:bg-gray-800 hover:text-white border border-gray-700/50 px-6 py-3 rounded-full font-medium transition-all duration-300 flex items-center gap-2 group">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-400 group-hover:scale-110 transition-transform"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        My Events Status
+                    </button>
                     <button wire:click="$toggle('showCreateModal')" class="bg-indigo-600/20 text-indigo-400 hover:bg-indigo-600 hover:text-white border border-indigo-500/30 px-6 py-3 rounded-full font-medium shadow-[0_0_15px_rgba(79,70,229,0.2)] transition-all duration-300 flex items-center gap-2 group">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:rotate-90 transition-transform"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
                         Create Event
@@ -515,6 +521,89 @@ new #[Layout('layouts.app')] class extends Component {
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        @endif
+
+        <!-- My Submitted Events Modal -->
+        @if($showMyEventsModal)
+            <div class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/80 backdrop-blur-sm p-4 sm:p-0">
+                <div class="relative w-full max-w-2xl bg-gray-800 rounded-3xl shadow-2xl border border-gray-700 p-8 transform transition-all max-h-[90vh] flex flex-col">
+                    <div class="flex justify-between items-center border-b border-gray-700 pb-5 mb-6 shrink-0">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white flex items-center gap-3">
+                                <span class="bg-amber-500/20 p-2 rounded-xl text-amber-400 border border-amber-500/30">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                </span>
+                                My Submitted Events
+                            </h3>
+                            <p class="text-sm text-gray-400 mt-1">Track the approval status of your event proposals.</p>
+                        </div>
+                        <button wire:click="$toggle('showMyEventsModal')" class="text-gray-500 hover:text-gray-300 bg-gray-900 hover:bg-gray-700 p-2 rounded-full transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                        </button>
+                    </div>
+
+                    <div class="overflow-y-auto pr-2 custom-scrollbar flex-1">
+                        @if($mySubmittedEvents->count() > 0)
+                            <div class="flex flex-col gap-4">
+                                @foreach($mySubmittedEvents as $evt)
+                                    @php
+                                        $statusMap = [
+                                            'pending'  => ['label' => 'Pending Review', 'bg' => 'rgba(245,158,11,.12)',  'border' => 'rgba(245,158,11,.3)',  'text' => '#fbbf24', 'icon' => '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'],
+                                            'approved' => ['label' => 'Approved',       'bg' => 'rgba(16,185,129,.12)',  'border' => 'rgba(16,185,129,.3)',  'text' => '#34d399', 'icon' => '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>'],
+                                            'rejected' => ['label' => 'Rejected',       'bg' => 'rgba(239,68,68,.12)',   'border' => 'rgba(239,68,68,.3)',   'text' => '#f87171', 'icon' => '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>'],
+                                        ][$evt->status] ?? [];
+                                    @endphp
+                                    <div class="flex flex-col sm:flex-row sm:items-center gap-4 rounded-2xl border p-4 transition-all"
+                                        style="background:#1e293b; border-color:{{ $statusMap['border'] }};">
+                                        <!-- Date badge -->
+                                        <div class="shrink-0 w-14 h-14 rounded-xl flex flex-col items-center justify-center border border-gray-700 bg-gray-900 text-center shadow-inner">
+                                            <div class="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">{{ $evt->event_date->format('M') }}</div>
+                                            <div class="text-xl font-black text-white leading-none mt-0.5">{{ $evt->event_date->format('d') }}</div>
+                                        </div>
+                                        <!-- Details -->
+                                        <div class="flex-1 min-w-0">
+                                            <p class="font-bold text-white text-base line-clamp-1">{{ $evt->title }}</p>
+                                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-sm text-gray-400">
+                                                <span class="flex items-center gap-1.5">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                                                    {{ \Carbon\Carbon::parse($evt->start_time)->format('h:i A') }}
+                                                </span>
+                                                <span class="flex items-center gap-1.5">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-teal-400"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                    <span class="line-clamp-1">{{ $evt->location }}</span>
+                                                </span>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-2">Submitted {{ $evt->created_at->diffForHumans() }}</p>
+                                        </div>
+                                        <!-- Status badge -->
+                                        <div class="shrink-0 sm:self-center self-start mt-2 sm:mt-0">
+                                            <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-bold shadow-sm"
+                                                style="background:{{ $statusMap['bg'] }}; border:1px solid {{ $statusMap['border'] }}; color:{{ $statusMap['text'] }};">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">{!! $statusMap['icon'] !!}</svg>
+                                                {{ $statusMap['label'] }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="py-12 flex flex-col items-center justify-center text-center">
+                                <div class="w-16 h-16 bg-gray-900 rounded-full flex items-center justify-center mb-4 border border-gray-700 shadow-inner">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                </div>
+                                <h4 class="text-lg font-bold text-gray-300 mb-2">No Submitted Events</h4>
+                                <p class="text-sm text-gray-500 max-w-sm">You haven't submitted any event proposals yet.</p>
+                            </div>
+                        @endif
+                    </div>
+                    
+                    <div class="pt-5 flex justify-end border-t border-gray-700 mt-6 shrink-0">
+                        <button wire:click="$toggle('showMyEventsModal')" class="px-6 py-2.5 bg-gray-800 border border-gray-600 rounded-xl text-gray-300 font-bold hover:bg-gray-700 transition-colors">
+                            Close
+                        </button>
+                    </div>
                 </div>
             </div>
         @endif
