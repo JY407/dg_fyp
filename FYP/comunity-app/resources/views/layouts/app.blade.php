@@ -17,6 +17,43 @@
     <!-- Vite CSS & JS -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
+    <style>
+        /* Global Multicultural Design System */
+        .mc-strip {
+            display: flex;
+            height: 4px;
+            width: 100%;
+            flex-shrink: 0;
+        }
+        .mc-strip-malay   { flex: 1; background: linear-gradient(90deg, #059669, #34d399); }
+        .mc-strip-chinese { flex: 1; background: linear-gradient(90deg, #dc2626, #f59e0b); }
+        .mc-strip-indian  { flex: 1; background: linear-gradient(90deg, #7c3aed, #f97316); }
+
+        .mc-pill {
+            display: inline-flex; align-items: center; gap: 4px;
+            font-size: 10px; font-weight: 700; letter-spacing: .04em;
+            padding: 2px 9px; border-radius: 99px; white-space: nowrap;
+        }
+        .mc-pill-malay   { background: rgba(5,150,105,.15);  color: #6ee7b7; border: 1px solid rgba(5,150,105,.3); }
+        .mc-pill-chinese { background: rgba(220,38,38,.15);  color: #fca5a5; border: 1px solid rgba(220,38,38,.3); }
+        .mc-pill-indian  { background: rgba(124,58,237,.15); color: #c4b5fd; border: 1px solid rgba(124,58,237,.3); }
+        .mc-pill-general { background: rgba(99,102,241,.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,.3); }
+
+        /* Page-level multicultural header accent */
+        .mc-page-accent {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 24px;
+            background: rgba(15,23,42,0.6);
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            flex-shrink: 0;
+        }
+        .mc-page-accent-dot {
+            width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+        }
+    </style>
+
     @stack('styles')
     @livewireStyles
 </head>
@@ -75,6 +112,9 @@
                 </div>
             </div>
             @endauth
+
+            {{-- Global Multicultural Hero Banner --}}
+            @include('partials.multicultural-banner')
 
             {{-- Page Slot --}}
             <div style="flex:1;">

@@ -78,6 +78,7 @@ new #[Layout('layouts.app')] class extends Component {
 
         /* ── Search bar ── */
         .ann-search-wrap { position: relative; margin-bottom: 1.75rem; }
+
         .ann-search-wrap .search-icon {
             position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
             color: #475569; pointer-events: none;

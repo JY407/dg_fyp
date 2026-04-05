@@ -137,6 +137,7 @@ new #[Layout('layouts.app')] class extends Component {
                     Community Facilities
                 </h1>
                 <p class="text-gray-400 text-lg">Book premium spaces for your events and activities.</p>
+
             </div>
         </div>
 

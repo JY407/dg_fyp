@@ -101,6 +101,7 @@
 <div class="glass-card" style="max-width: 500px; margin: 0 auto; text-align: center;">
     <div style="margin-bottom: 2rem;">
         <h2 class="auth-title">Visitor E-Pass</h2>
+
         <p class="auth-subtitle">Keep this page open while inside the premises.</p>
     </div>
 

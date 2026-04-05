@@ -181,6 +181,7 @@ new #[Layout('layouts.app')] class extends Component {
             </h1>
             <p class="text-gray-400 text-lg max-w-2xl mx-auto">
                 {{ __('app.events_subtitle') }}
+
             </p>
             @auth
                 <div class="mt-8 flex justify-center gap-4">

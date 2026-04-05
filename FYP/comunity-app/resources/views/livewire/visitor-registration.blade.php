@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Visitor;
+
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Validate;

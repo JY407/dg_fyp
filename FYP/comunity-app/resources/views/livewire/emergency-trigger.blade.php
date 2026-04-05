@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use App\Models\EmergencyAlert;
+
 use App\Models\SecurityDuty;
 use Illuminate\Support\Facades\Auth;
 

@@ -4,6 +4,7 @@ use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use App\Models\ContactMessage;
 
+
 new #[Layout('layouts.app')] class extends Component {
     public $name = '';
     public $email = '';

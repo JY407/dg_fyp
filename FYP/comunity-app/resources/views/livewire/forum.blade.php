@@ -138,6 +138,7 @@ new #[Layout('layouts.app')] class extends Component {
                     Community Forum
                 </h1>
                 <p style="color: #94a3b8; font-size: 1.1rem;">Connect with your neighborhood.</p>
+
             </div>
             
             @if (session()->has('success'))
