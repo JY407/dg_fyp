@@ -39,6 +39,12 @@
                                     @if($isGroupChat && $selectedGroup && $selectedGroup->id === $group->id)
                                         <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-black"></div>
                                     @endif
+                                    @php $groupUnread = $unreadCounts['group'][$group->id] ?? 0; @endphp
+                                    @if($groupUnread > 0)
+                                        <div class="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 rounded-full border-2 border-black flex items-center justify-center px-1 animate-pulse">
+                                            <span class="text-[10px] font-bold text-white leading-none">{{ $groupUnread > 99 ? '99+' : $groupUnread }}</span>
+                                        </div>
+                                    @endif
                                 </div>
                                 <span class="text-xs font-medium text-center truncate w-20 {{ $isGroupChat && $selectedGroup && $selectedGroup->id === $group->id ? 'text-green-400' : 'text-secondary group-hover:text-white' }}">
                                     {{$group->name}}
@@ -62,6 +68,12 @@
                                     {{ substr($user->name, 0, 2) }}
                                     @if(!$isGroupChat && $selectedUser && $selectedUser->id === $user->id)
                                         <div class="absolute -bottom-1 -right-1 w-4 h-4 bg-indigo-500 rounded-full border-2 border-black"></div>
+                                    @endif
+                                    @php $userUnread = $unreadCounts['direct'][$user->id] ?? 0; @endphp
+                                    @if($userUnread > 0)
+                                        <div class="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 rounded-full border-2 border-black flex items-center justify-center px-1 animate-pulse">
+                                            <span class="text-[10px] font-bold text-white leading-none">{{ $userUnread > 99 ? '99+' : $userUnread }}</span>
+                                        </div>
                                     @endif
                                 </div>
                                 <span class="text-xs font-medium text-center truncate w-20 {{ !$isGroupChat && $selectedUser && $selectedUser->id === $user->id ? 'text-indigo-400' : 'text-secondary group-hover:text-white' }}">

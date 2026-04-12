@@ -62,6 +62,36 @@ class Chat extends Component
             })->latest()->get();
     }
 
+    #[Computed]
+    public function unreadCounts()
+    {
+        // Unread direct messages grouped by sender_id
+        $directCounts = ChatMessage::where('receiver_id', Auth::id())
+            ->where('is_read', false)
+            ->whereNull('group_id')
+            ->selectRaw('sender_id, COUNT(*) as count')
+            ->groupBy('sender_id')
+            ->pluck('count', 'sender_id')
+            ->toArray();
+
+        // Unread group messages grouped by group_id (messages not sent by auth user)
+        $groupCounts = ChatMessage::where('is_read', false)
+            ->where('sender_id', '!=', Auth::id())
+            ->whereNotNull('group_id')
+            ->whereHas('group', function ($q) {
+                $q->where('created_by', Auth::id())
+                  ->orWhereHas('members', function ($q2) {
+                      $q2->where('user_id', Auth::id());
+                  });
+            })
+            ->selectRaw('group_id, COUNT(*) as count')
+            ->groupBy('group_id')
+            ->pluck('count', 'group_id')
+            ->toArray();
+
+        return ['direct' => $directCounts, 'group' => $groupCounts];
+    }
+
     // Remove old loadGroups method as it is now computed
     // public function loadGroups() ...
 
@@ -71,6 +101,12 @@ class Chat extends Component
         $this->selectedGroup = null;
         $this->selectedUser = User::find($id);
         $this->loadMessages();
+        // Mark messages from this user as read
+        ChatMessage::where('sender_id', $id)
+            ->where('receiver_id', Auth::id())
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+        unset($this->unreadCounts);
     }
 
     public function selectGroup($id)
@@ -79,6 +115,12 @@ class Chat extends Component
         $this->selectedUser = null;
         $this->selectedGroup = Group::with('members.user')->find($id);
         $this->loadMessages();
+        // Mark group messages as read
+        ChatMessage::where('group_id', $id)
+            ->where('sender_id', '!=', Auth::id())
+            ->where('is_read', false)
+            ->update(['is_read' => true]);
+        unset($this->unreadCounts);
     }
 
     public function loadMessages()
@@ -194,7 +236,11 @@ class Chat extends Component
         if (!$this->isGroupChat && isset($message['sender_id']) && $this->selectedUser && $message['sender_id'] == $this->selectedUser->id && !isset($message['group_id'])) {
             $messageObj = ChatMessage::find($message['id']);
             $this->chatMessages->push($messageObj);
+            // Mark immediately as read since the user is viewing this conversation
+            ChatMessage::where('id', $message['id'])->update(['is_read' => true]);
         }
+        // Always refresh unread counts when a new message arrives
+        unset($this->unreadCounts);
 
         // Handle Group Messages (Basic polling/refresh might be needed if not using Echo for groups yet)
         // If we want real-time group messages, we need to listen to group channels.
@@ -204,7 +250,8 @@ class Chat extends Component
     {
         return view('livewire.chat', [
             'users' => $this->users,
-            'groups' => $this->groups
+            'groups' => $this->groups,
+            'unreadCounts' => $this->unreadCounts
         ])->layout('layouts.app');
     }
 }
