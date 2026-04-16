@@ -20,7 +20,9 @@ new #[Layout('layouts.admin')] class extends Component {
     public $image;
     public $existing_image;
     public $showFacilityModal = false;
+    public $showViewBookingModal = false;
     public $isEditing = false;
+    public $viewingBooking = null;
 
     // Listeners
     protected $listeners = ['refreshComponent' => '$refresh'];
@@ -118,7 +120,24 @@ new #[Layout('layouts.admin')] class extends Component {
     {
         $booking = FacilityBooking::findOrFail($id);
         $booking->update(['status' => $status]);
+
+        if ($this->viewingBooking && $this->viewingBooking->id == $id) {
+            $this->viewingBooking = $booking->fresh(['user']);
+        }
+
         session()->flash('success', "Booking {$status} successfully.");
+    }
+
+    public function viewBooking($id)
+    {
+        $this->viewingBooking = FacilityBooking::with(['user'])->findOrFail($id);
+        $this->showViewBookingModal = true;
+    }
+
+    public function closeViewBookingModal()
+    {
+        $this->showViewBookingModal = false;
+        $this->viewingBooking = null;
     }
 }; ?>
 
@@ -275,6 +294,14 @@ new #[Layout('layouts.admin')] class extends Component {
                                     </td>
                                     <td class="px-8 py-5 text-right">
                                         <div class="flex items-center justify-end gap-3 opacity-90 group-hover:opacity-100 transition-opacity">
+                                            <button wire:click="viewBooking({{ $booking->id }})" 
+                                                class="text-blue-600 dark:text-blue-400 hover:text-white hover:bg-blue-600 dark:hover:bg-blue-500 bg-blue-50 dark:bg-blue-900/30 p-2.5 rounded-xl transition-all border border-blue-100 dark:border-blue-800"
+                                                title="View Details">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                            </button>
                                             <button wire:click="updateBookingStatus({{ $booking->id }}, 'approved')" class="bg-green-50 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800/50 hover:bg-green-600 hover:text-white hover:border-transparent dark:hover:bg-green-500 px-5 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-2 transform hover:-translate-y-0.5 shadow-sm">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
                                                 Approve
@@ -346,7 +373,17 @@ new #[Layout('layouts.admin')] class extends Component {
                                         @endif
                                     </td>
                                     <td class="px-8 py-5 text-sm font-medium text-gray-400 dark:text-gray-500">
-                                        {{ $booking->updated_at->format('M d, g:i A') }}
+                                        <div class="flex items-center justify-between gap-2">
+                                            <span>{{ $booking->updated_at->format('M d, g:i A') }}</span>
+                                            <button wire:click="viewBooking({{ $booking->id }})" 
+                                                class="text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 p-1.5 rounded-lg transition-all"
+                                                title="View Details">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </td>
                                 </tr>
                             @empty
@@ -460,6 +497,78 @@ new #[Layout('layouts.admin')] class extends Component {
                         </button>
                     </div>
                 </form>
+            </div>
+        </div>
+    @endif
+    @endif
+
+    {{-- View Booking Modal --}}
+    @if ($showViewBookingModal && $viewingBooking)
+        <div class="fixed inset-0 z-[110] flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4 overflow-y-auto">
+            <div class="bg-white dark:bg-gray-800 rounded-[2rem] shadow-2xl w-full max-w-lg my-8 border border-gray-100 dark:border-gray-700 overflow-hidden relative">
+                <div class="px-8 py-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Booking Information</h3>
+                    <button wire:click="closeViewBookingModal" class="text-gray-400 hover:text-gray-700 dark:hover:text-white bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 p-2.5 rounded-full border border-gray-200 dark:border-gray-600 transition-all hover:rotate-90">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="p-8 space-y-6">
+                    {{-- Resident Info --}}
+                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800">
+                        <div class="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xl">
+                            {{ strtoupper(substr($viewingBooking->user->name, 0, 1)) }}
+                        </div>
+                        <div>
+                            <div class="font-bold text-gray-900 dark:text-white text-lg">{{ $viewingBooking->user->name }}</div>
+                            <div class="text-sm text-gray-500 flex items-center gap-2">
+                                <span class="px-2 py-0.5 bg-white dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700 text-[10px] font-bold">UNIT {{ $viewingBooking->user->unit_number ?? 'N/A' }}</span>
+                                <span class="text-[10px] uppercase font-bold tracking-wider opacity-50">{{ $viewingBooking->user->email }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Facility & Status --}}
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700">
+                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Facility</div>
+                            <div class="font-bold text-gray-900 dark:text-white text-base">{{ $viewingBooking->facility_name }}</div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700">
+                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Status</div>
+                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase
+                                {{ $viewingBooking->status === 'approved' ? 'bg-green-100 text-green-700' : ($viewingBooking->status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700') }}">
+                                {{ $viewingBooking->status }}
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Schedule --}}
+                    <div class="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Booking Schedule</div>
+                        <div class="font-bold text-gray-900 dark:text-white text-base">
+                            {{ \Carbon\Carbon::parse($viewingBooking->booking_date)->format('l, M d, Y') }}
+                        </div>
+                        <div class="text-sm text-gray-500 mt-0.5 flex items-center gap-1.5 font-medium">
+                            <svg class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            {{ \Carbon\Carbon::parse($viewingBooking->start_time)->format('h:i A') }} – {{ \Carbon\Carbon::parse($viewingBooking->end_time)->format('h:i A') }}
+                        </div>
+                    </div>
+
+                    @if($viewingBooking->status === 'pending')
+                    <div class="flex gap-3 pt-2">
+                        <button wire:click="updateBookingStatus({{ $viewingBooking->id }}, 'approved')" class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-600/20 transition-all transform hover:-translate-y-0.5 uppercase tracking-wide text-xs">Approve Request</button>
+                        <button wire:click="updateBookingStatus({{ $viewingBooking->id }}, 'rejected')" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition-all transform hover:-translate-y-0.5 uppercase tracking-wide text-xs">Reject Request</button>
+                    </div>
+                    @else
+                        <div class="p-4 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-700 text-center">
+                            <p class="text-xs text-gray-400 font-bold uppercase tracking-widest">This request has been processed</p>
+                            <p class="text-[10px] text-gray-500 mt-1 italic">Action recorded at {{ $viewingBooking->updated_at->format('M d, Y h:i A') }}</p>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     @endif

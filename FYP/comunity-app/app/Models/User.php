@@ -126,4 +126,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(FacilityBooking::class);
     }
+
+    /**
+     * Get the service bookings by the user.
+     */
+    public function serviceBookings()
+    {
+        return $this->hasMany(ServiceBooking::class);
+    }
 }

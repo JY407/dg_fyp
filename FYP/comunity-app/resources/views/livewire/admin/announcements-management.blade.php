@@ -5,16 +5,21 @@ use App\Models\Announcement;
 use App\Models\UserNotification;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
+use Livewire\WithFileUploads;
 
 new #[Layout('layouts.admin')] class extends Component {
-    use WithPagination;
+    use WithPagination, WithFileUploads;
 
     public $showModal = false;
+    public $showViewModal = false;
     public $isEditing = false;
     public $announcementId = null;
+    public $viewingAnnouncement = null;
     public $title = '';
     public $content = '';
     public $published_at = '';
+    public $image;
+    public $current_image_path;
 
     public function with()
     {
@@ -25,7 +30,7 @@ new #[Layout('layouts.admin')] class extends Component {
 
     public function openCreateModal()
     {
-        $this->reset(['announcementId', 'title', 'content', 'published_at']);
+        $this->reset(['announcementId', 'title', 'content', 'published_at', 'image', 'current_image_path']);
         $this->published_at = now()->format('Y-m-d\TH:i');
         $this->isEditing = false;
         $this->showModal = true;
@@ -40,6 +45,8 @@ new #[Layout('layouts.admin')] class extends Component {
         $this->published_at = $announcement->published_at
             ? $announcement->published_at->format('Y-m-d\TH:i')
             : now()->format('Y-m-d\TH:i');
+        $this->current_image_path = $announcement->image_path;
+        $this->image = null;
         $this->isEditing = true;
         $this->showModal = true;
     }
@@ -50,13 +57,31 @@ new #[Layout('layouts.admin')] class extends Component {
         $this->resetValidation();
     }
 
+    public function viewAnnouncement($id)
+    {
+        $this->viewingAnnouncement = Announcement::findOrFail($id);
+        $this->showViewModal = true;
+    }
+
+    public function closeViewModal()
+    {
+        $this->showViewModal = false;
+        $this->viewingAnnouncement = null;
+    }
+
     public function save()
     {
         $this->validate([
             'title'        => 'required|string|max:255',
             'content'      => 'required|string',
             'published_at' => 'required|date',
+            'image'        => 'nullable|image|max:2048', // up to 2MB
         ]);
+
+        $imagePath = $this->current_image_path;
+        if ($this->image) {
+            $imagePath = $this->image->store('announcements', 'public');
+        }
 
         Announcement::updateOrCreate(
             ['id' => $this->announcementId],
@@ -64,6 +89,7 @@ new #[Layout('layouts.admin')] class extends Component {
                 'title'        => $this->title,
                 'content'      => $this->content,
                 'published_at' => $this->published_at,
+                'image_path'   => $imagePath,
             ]
         );
 
@@ -141,6 +167,14 @@ new #[Layout('layouts.admin')] class extends Component {
                             </td>
                             <td class="px-8 py-5 text-right">
                                 <div class="flex items-center justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                                    <button wire:click="viewAnnouncement({{ $announcement->id }})"
+                                        class="text-blue-600 dark:text-blue-400 hover:text-white hover:bg-blue-600 dark:hover:bg-blue-500 bg-blue-50 dark:bg-blue-900/30 p-2.5 rounded-lg transition-all duration-200 border border-blue-100 dark:border-blue-800 hover:border-transparent"
+                                        title="View Details">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </button>
                                     <button wire:click="openEditModal({{ $announcement->id }})"
                                         class="text-indigo-600 dark:text-indigo-400 hover:text-white hover:bg-indigo-600 dark:hover:bg-indigo-500 bg-indigo-50 dark:bg-indigo-900/30 p-2.5 rounded-lg transition-all duration-200 border border-indigo-100 dark:border-indigo-800 hover:border-transparent"
                                         title="Edit">
@@ -185,6 +219,47 @@ new #[Layout('layouts.admin')] class extends Component {
         @endif
     </div>
 
+    {{-- View Announcement Modal --}}
+    @if ($showViewModal && $viewingAnnouncement)
+        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4 overflow-y-auto">
+            <div class="bg-white dark:bg-gray-800 rounded-[2rem] shadow-2xl w-full max-w-2xl my-8 border border-gray-100 dark:border-gray-700 relative overflow-hidden">
+                <div class="px-8 py-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 rounded-t-[2rem] flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Announcement Details</h3>
+                    <button wire:click="closeViewModal" class="text-gray-400 hover:text-gray-700 dark:hover:text-white bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 p-2.5 rounded-full border border-gray-200 dark:border-gray-600 transition-all hover:rotate-90">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                    @if ($viewingAnnouncement->image_path)
+                        <div class="mb-6 rounded-2xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-sm">
+                            <img src="{{ asset('storage/' . $viewingAnnouncement->image_path) }}" class="w-full h-auto max-h-80 object-cover">
+                        </div>
+                    @endif
+
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="px-3 py-1 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold uppercase tracking-wider rounded-full border border-indigo-100 dark:border-indigo-800">Community News</span>
+                        <span class="text-xs text-gray-400">{{ $viewingAnnouncement->published_at ? $viewingAnnouncement->published_at->format('M d, Y • h:i A') : 'Draft' }}</span>
+                    </div>
+
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4 leading-tight">{{ $viewingAnnouncement->title }}</h2>
+                    
+                    <div class="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                        {{ $viewingAnnouncement->content }}
+                    </div>
+                </div>
+
+                <div class="px-8 py-6 border-t border-gray-100 dark:border-gray-700 bg-gray-50/30 dark:bg-gray-900/20 flex justify-end">
+                    <button wire:click="openEditModal({{ $viewingAnnouncement->id }}); closeViewModal();" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/20 transition-all transform hover:-translate-y-0.5 text-sm uppercase tracking-wider">
+                        Edit Announcement
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
     {{-- Create / Edit Modal --}}
     @if ($showModal)
         <div class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4 overflow-y-auto">
@@ -227,6 +302,30 @@ new #[Layout('layouts.admin')] class extends Component {
                         <input type="datetime-local" wire:model="published_at"
                             class="w-full rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 p-3.5 transition-all outline-none">
                         @error('published_at') <span class="text-red-500 text-xs font-semibold mt-1.5 block">{{ $message }}</span> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Attachment (Image)</label>
+                        <div class="mt-1 flex items-center gap-4">
+                            <label class="px-4 py-2 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors">
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-200">Choose Image</span>
+                                <input type="file" wire:model="image" class="hidden" accept="image/*">
+                            </label>
+                            <div wire:loading wire:target="image" class="text-sm text-indigo-500 font-medium">Uploading...</div>
+                        </div>
+                        @error('image') <span class="text-red-500 text-xs font-semibold mt-1.5 block">{{ $message }}</span> @enderror
+
+                        @if ($image)
+                            <div class="mt-4">
+                                <span class="block text-xs font-semibold text-gray-500 mb-2">Preview</span>
+                                <img src="{{ $image->temporaryUrl() }}" class="h-32 object-contain rounded-lg border border-gray-200 dark:border-gray-700">
+                            </div>
+                        @elseif ($current_image_path)
+                            <div class="mt-4 relative inline-block group">
+                                <span class="block text-xs font-semibold text-gray-500 mb-2">Current Image</span>
+                                <img src="{{ asset('storage/' . $current_image_path) }}" class="h-32 object-contain rounded-lg border border-gray-200 dark:border-gray-700">
+                            </div>
+                        @endif
                     </div>
                 </div>
 

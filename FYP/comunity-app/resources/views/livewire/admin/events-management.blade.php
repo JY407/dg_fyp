@@ -19,8 +19,10 @@ new #[Layout('layouts.admin')] class extends Component {
     // Modal state
     public bool $showModal = false;
     public bool $showDeleteModal = false;
+    public bool $showViewModal = false;
     public ?int $editingId = null;
     public ?int $deletingId = null;
+    public ?Event $viewingEvent = null;
 
     // Form fields
     public string $title = '';
@@ -79,6 +81,13 @@ new #[Layout('layouts.admin')] class extends Component {
         $this->existingImage = $event->image_path;
         $this->image         = null;
         $this->showModal     = true;
+    }
+
+    // ─── Open VIEW modal ────────────────────────────────────────────────────
+    public function openView(int $id): void
+    {
+        $this->viewingEvent = Event::with('creator')->findOrFail($id);
+        $this->showViewModal = true;
     }
 
     // ─── Save (Create or Update) ─────────────────────────────────────────────
@@ -317,6 +326,14 @@ new #[Layout('layouts.admin')] class extends Component {
                                 </td>
                                 <td class="px-5 py-4">
                                     <div class="flex items-center justify-end gap-1">
+                                        {{-- View --}}
+                                        <button wire:click="openView({{ $event->id }})"
+                                            class="p-2 rounded-lg text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all" title="View Details">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                            </svg>
+                                        </button>
                                         {{-- Edit --}}
                                         <button wire:click="openEdit({{ $event->id }})"
                                             class="p-2 rounded-lg text-slate-400 hover:text-indigo-400 hover:bg-indigo-500/10 transition-all" title="Edit">
@@ -379,6 +396,83 @@ new #[Layout('layouts.admin')] class extends Component {
             @endif
         </div>
     </div>
+
+    {{-- ════════════════════════════════════════════════════════
+         VIEW MODAL
+    ════════════════════════════════════════════════════════ --}}
+    @if($showViewModal && $viewingEvent)
+        <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style="background:rgba(0,0,0,.65); backdrop-filter:blur(4px);">
+            <div class="w-full max-w-2xl rounded-2xl border border-slate-700/60 shadow-2xl overflow-hidden"
+                style="background:#1e293b;" wire:click.stop>
+                
+                {{-- Modal header --}}
+                <div class="px-6 py-4 border-b border-slate-700/50 flex items-center justify-between"
+                    style="background:#0f172a;">
+                    <h3 class="text-base font-bold text-white">Event Details</h3>
+                    <button wire:click="$set('showViewModal', false)"
+                        class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                {{-- Modal body --}}
+                <div class="p-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+                    @if($viewingEvent->image_path)
+                        <img src="{{ asset('storage/'.$viewingEvent->image_path) }}" class="w-full h-48 object-cover rounded-xl mb-6 shadow-md border border-slate-700">
+                    @endif
+
+                    <h2 class="text-2xl font-bold text-white mb-2">{{ $viewingEvent->title }}</h2>
+                    
+                    <div class="flex items-center gap-3 mb-6">
+                        @php
+                            $vsc = ['pending'=>['bg'=>'rgba(245,158,11,.1)','border'=>'rgba(245,158,11,.25)','text'=>'#fbbf24'],
+                                    'approved'=>['bg'=>'rgba(16,185,129,.1)','border'=>'rgba(16,185,129,.25)','text'=>'#34d399'],
+                                    'rejected'=>['bg'=>'rgba(239,68,68,.1)','border'=>'rgba(239,68,68,.25)','text'=>'#f87171']][$viewingEvent->status] ?? [];
+                        @endphp
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
+                            style="background:{{ $vsc['bg'] }}; border:1px solid {{ $vsc['border'] }}; color:{{ $vsc['text'] }};">
+                            <span class="w-1.5 h-1.5 rounded-full" style="background:{{ $vsc['text'] }};"></span>
+                            {{ ucfirst($viewingEvent->status) }}
+                        </span>
+                        <span class="text-xs text-slate-400 font-medium">By: {{ $viewingEvent->creator->name ?? 'Admin' }}</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                        <div class="flex items-center gap-3 p-3 rounded-xl border border-slate-700/50" style="background:#0f172a;">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="background:rgba(99,102,241,.1); border:1px solid rgba(99,102,241,.2);">
+                                <svg class="w-5 h-5 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Date & Time</p>
+                                <p class="text-sm font-semibold text-slate-200 mt-0.5">{{ $viewingEvent->event_date->format('d M Y') }}</p>
+                                <p class="text-xs text-slate-400">{{ \Carbon\Carbon::parse($viewingEvent->start_time)->format('h:i A') }} – {{ \Carbon\Carbon::parse($viewingEvent->end_time)->format('h:i A') }}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 p-3 rounded-xl border border-slate-700/50" style="background:#0f172a;">
+                            <div class="w-10 h-10 rounded-lg flex items-center justify-center shrink-0" style="background:rgba(16,185,129,.1); border:1px solid rgba(16,185,129,.2);">
+                                <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Location</p>
+                                <p class="text-sm font-semibold text-slate-200 mt-0.5">{{ $viewingEvent->location }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Description</h4>
+                        <div class="p-4 rounded-xl border border-slate-700/50 text-sm text-slate-300 leading-relaxed max-h-40 overflow-y-auto custom-scrollbar" style="background:#0f172a;">
+                            {!! nl2br(e($viewingEvent->description)) !!}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
     {{-- ════════════════════════════════════════════════════════
          CREATE / EDIT MODAL

@@ -16,4 +16,9 @@ class CommunityService extends Model
         'contact_number',
         'status',
     ];
+
+    public function serviceBookings()
+    {
+        return $this->hasMany(ServiceBooking::class);
+    }
 }

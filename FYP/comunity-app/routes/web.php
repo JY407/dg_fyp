@@ -73,6 +73,7 @@ Route::middleware(['auth', \App\Http\Middleware\IsAdmin::class])->prefix('admin'
     Volt::route('contact-messages', 'admin.contact-messages')->name('contact-messages');
     Volt::route('facilities', 'admin.facilities-management')->name('facilities');
     Volt::route('announcements', 'admin.announcements-management')->name('announcements-management');
+    Volt::route('road-notices', 'admin.road-notices')->name('road-notices');
     Volt::route('forum', 'admin.forum-management')->name('forum-management');
     Volt::route('emergencies', 'admin.emergencies-management')->name('emergencies-management');
 });

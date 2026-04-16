@@ -3,6 +3,7 @@
 use Livewire\Volt\Component;
 use Livewire\Attributes\Layout;
 use App\Models\Announcement;
+use App\Models\RoadNotice;
 
 new #[Layout('layouts.app')] class extends Component {
     public string $search = '';
@@ -21,6 +22,7 @@ new #[Layout('layouts.app')] class extends Component {
 
         return [
             'announcements' => $announcements,
+            'roadNotices' => RoadNotice::orderBy('created_at', 'desc')->take(5)->get(),
             'selectedAnn'   => $this->selectedId
                 ? $announcements->firstWhere('id', $this->selectedId)
                 : null,
@@ -273,6 +275,63 @@ new #[Layout('layouts.app')] class extends Component {
                 class="ann-search">
         </div>
 
+        {{-- ── Road Notices Banner ── --}}
+        @if(isset($roadNotices) && $roadNotices->count() > 0)
+            <div style="margin-bottom: 2rem; display: flex; flex-direction: column; gap: 1rem;">
+                @foreach($roadNotices as $notice)
+                    @php
+                        $isResolved = $notice->status === 'Resolved';
+                        $severityConfig = match($notice->severity) {
+                            'High'   => ['bg' => $isResolved ? 'rgba(30,41,59,0.5)' : 'rgba(239,68,68,0.15)',  'text' => $isResolved ? '#64748b' : '#f87171', 'border' => $isResolved ? 'rgba(71,85,105,0.3)' : 'rgba(239,68,68,0.3)',  'icon' => '🚨'],
+                            'Medium' => ['bg' => $isResolved ? 'rgba(30,41,59,0.5)' : 'rgba(245,158,11,0.15)', 'text' => $isResolved ? '#64748b' : '#fbbf24', 'border' => $isResolved ? 'rgba(71,85,105,0.3)' : 'rgba(245,158,11,0.3)', 'icon' => '⚠️'],
+                            default  => ['bg' => $isResolved ? 'rgba(30,41,59,0.5)' : 'rgba(56,189,248,0.15)', 'text' => $isResolved ? '#64748b' : '#38bdf8', 'border' => $isResolved ? 'rgba(71,85,105,0.3)' : 'rgba(56,189,248,0.3)', 'icon' => 'ℹ️'],
+                        };
+                        $typeIcon = match($notice->notice_type) {
+                            'Road Closure' => '🚧',
+                            'Detour'       => '🔀',
+                            'Maintenance'  => '🔧',
+                            'Event Setup'  => '⛺',
+                            default        => '⚠️',
+                        };
+                        if ($isResolved) $typeIcon = '✅';
+                    @endphp
+                    <div style="background: {{ $severityConfig['bg'] }}; border: 1px solid {{ $severityConfig['border'] }}; border-radius: 16px; padding: 1.25rem 1.5rem; display: flex; gap: 1.25rem; align-items: flex-start; position: relative; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,.2); {{ $isResolved ? 'opacity: 0.8;' : '' }}">
+                        <div style="position: absolute; top:0; left:0; width: 4px; height: 100%; background: {{ $severityConfig['text'] }};"></div>
+                        <div style="font-size: 24px; line-height: 1; flex-shrink: 0; margin-top: 2px;">{{ $typeIcon }}</div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
+                                <span style="font-size: 11px; font-weight: 800; color: {{ $severityConfig['text'] }}; text-transform: uppercase; letter-spacing: .05em;">{{ $notice->severity }} Priority</span>
+                                <span style="font-size: 11px; color: #94a3b8;">· {{ $notice->notice_type }} · {{ $notice->created_at->diffForHumans() }}</span>
+                                @if($isResolved)
+                                    <span style="font-size: 11px; font-weight: 800; color: #10b981; padding: 2px 6px; background: rgba(16,185,129,0.15); border-radius: 4px; margin-left: 6px;">RESOLVED</span>
+                                @endif
+                                @if($notice->image_path)
+                                    <svg style="margin-left:auto;color:{{ $severityConfig['text'] }};" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                @endif
+                            </div>
+                            <h3 style="font-size: 16px; font-weight: 800; color: #f8fafc; margin-bottom: 6px; line-height: 1.3;">{{ $notice->title }}</h3>
+                            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 8px;">
+                                <svg width="14" height="14" fill="none" stroke="{{ $severityConfig['text'] }}" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <span style="font-size: 13px; font-weight: 600; color: #cbd5e1;">{{ $notice->location }}</span>
+                            </div>
+                            <p style="font-size: 13.5px; color: #cbd5e1; line-height: 1.6; margin-bottom: 0;">{{ $notice->description }}</p>
+                            @if($notice->image_path)
+                                <div style="margin-top: 12px; {{ $isResolved ? 'opacity: 0.6; filter: grayscale(100%);' : '' }}">
+                                    <img src="{{ asset('storage/' . $notice->image_path) }}" alt="Road Notice Image" style="max-height: 180px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+                                </div>
+                            @endif
+                            @if($notice->starts_at)
+                                <div style="margin-top: 10px; font-size: 12px; color: #94a3b8; display: flex; align-items: center; gap: 6px;">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2"/></svg>
+                                    {{ $notice->starts_at->format('d M, h:i A') }} @if($notice->ends_at) - {{ $notice->ends_at->format('d M, h:i A') }} @endif
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
         {{-- ── Content ── --}}
         @if($announcements->isEmpty())
             <div class="ann-empty">
@@ -309,6 +368,11 @@ new #[Layout('layouts.app')] class extends Component {
             {{-- ── Featured card ── --}}
             <div class="ann-featured" wire:click="openAnnouncement({{ $first->id }})">
                 <div class="ann-featured-bar"></div>
+                @if($first->image_path)
+                    <div style="width: 100%; height: 260px; overflow: hidden; border-bottom: 1px solid rgba(71,85,105,.2); background: rgba(0,0,0,0.2);">
+                        <img src="{{ asset('storage/' . $first->image_path) }}" alt="Featured Image" style="width: 100%; height: 100%; object-fit: cover;">
+                    </div>
+                @endif
                 <div class="ann-featured-body">
                     <div class="ann-featured-icon">
                         <svg width="20" height="20" fill="none" stroke="#818cf8" stroke-width="1.8" viewBox="0 0 24 24">
@@ -321,6 +385,9 @@ new #[Layout('layouts.app')] class extends Component {
                             <span class="ann-tag-latest">Latest</span>
                             @if($firstIsNew)<span class="ann-tag-new">New</span>@endif
                             <span class="ann-featured-date">{{ $first->published_at->format('d F Y') }} · {{ $first->published_at->diffForHumans() }}</span>
+                            @if($first->image_path)
+                                <svg style="margin-left:auto;color:#818cf8;" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            @endif
                         </div>
                         <div class="ann-featured-title">{{ $first->title }}</div>
                         <p class="ann-featured-preview">{{ Str::limit($first->content, 160) }}</p>
@@ -347,10 +414,24 @@ new #[Layout('layouts.app')] class extends Component {
                     @endphp
                     <div class="ann-card" wire:click="openAnnouncement({{ $ann->id }})">
                         <div class="ann-card-bar" style="background:{{ $barColor }};"></div>
+                        @if($ann->image_path)
+                            <div style="width: 100%; height: 140px; overflow: hidden; border-bottom: 1px solid rgba(71,85,105,.2); background: rgba(0,0,0,0.2);">
+                                <img src="{{ asset('storage/' . $ann->image_path) }}" alt="Announcement Image" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+                        @else
+                            <div style="width: 100%; height: 140px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(71,85,105,.1);">
+                                <svg width="32" height="32" fill="none" stroke="{{ $barColor }}" stroke-width="1.5" viewBox="0 0 24 24" style="opacity:0.4;">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                </svg>
+                            </div>
+                        @endif
                         <div class="ann-card-body">
                             <div class="ann-card-meta">
                                 @if($isNew)<span class="ann-tag-new">New</span>@endif
                                 <span class="ann-card-date">{{ $ann->published_at->format('d M Y') }}</span>
+                                @if($ann->image_path)
+                                    <svg style="margin-left:auto;color:#a5b4fc;" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                @endif
                             </div>
                             <div class="ann-card-title">{{ $ann->title }}</div>
                             <p class="ann-card-preview">{{ $ann->content }}</p>
@@ -399,6 +480,11 @@ new #[Layout('layouts.app')] class extends Component {
                 </div>
                 <div class="ann-modal-body">
                     <div style="height:1px;background:linear-gradient(90deg,rgba(99,102,241,.45),rgba(139,92,246,.2),transparent);margin-bottom:1.4rem;"></div>
+                    @if($selectedAnn->image_path)
+                        <div style="margin-bottom: 1.5rem; text-align: center;">
+                            <img src="{{ asset('storage/' . $selectedAnn->image_path) }}" style="max-height: 250px; max-width: 100%; border-radius: 12px; border: 1px solid rgba(71,85,105,.3); box-shadow: 0 8px 20px rgba(0,0,0,.3); display: inline-block;" alt="Announcement Image">
+                        </div>
+                    @endif
                     <p style="color:#cbd5e1;font-size:14.5px;line-height:1.85;white-space:pre-wrap;">{{ $selectedAnn->content }}</p>
                 </div>
                 <div class="ann-modal-footer">

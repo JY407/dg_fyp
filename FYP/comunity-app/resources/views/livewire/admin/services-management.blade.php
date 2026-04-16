@@ -2,6 +2,7 @@
 
 use Livewire\Volt\Component;
 use App\Models\CommunityService;
+use App\Models\ServiceBooking;
 use Livewire\Attributes\Layout;
 use Livewire\WithPagination;
 
@@ -9,8 +10,11 @@ new #[Layout('layouts.admin')] class extends Component {
     use WithPagination;
 
     public $showModal = false;
+    public $showViewModal = false;
     public $isEditing = false;
     public $serviceId = null;
+    public $viewingBooking = null;
+    public $activeTab = 'catalog'; // catalog, bookings
 
     public $service_name = '';
     public $provider_name = '';
@@ -23,8 +27,38 @@ new #[Layout('layouts.admin')] class extends Component {
     public function with()
     {
         return [
-            'services' => CommunityService::orderBy('created_at', 'desc')->paginate(10),
+            'services' => CommunityService::orderBy('created_at', 'desc')->paginate(10, ['*'], 'servicesPage'),
+            'bookings' => ServiceBooking::with(['user', 'communityService'])->orderBy('created_at', 'desc')->paginate(10, ['*'], 'bookingsPage'),
         ];
+    }
+
+    public function setTab($tab)
+    {
+        $this->activeTab = $tab;
+    }
+
+    public function updateBookingStatus($id, $status)
+    {
+        $booking = ServiceBooking::findOrFail($id);
+        $booking->update(['status' => $status]);
+        
+        if ($this->viewingBooking && $this->viewingBooking->id == $id) {
+            $this->viewingBooking = $booking->fresh(['user', 'communityService']);
+        }
+        
+        session()->flash('success', "Booking {$status} successfully.");
+    }
+
+    public function viewBooking($id)
+    {
+        $this->viewingBooking = ServiceBooking::with(['user', 'communityService'])->findOrFail($id);
+        $this->showViewModal = true;
+    }
+
+    public function closeViewModal()
+    {
+        $this->showViewModal = false;
+        $this->viewingBooking = null;
     }
 
     public function openCreateModal()
@@ -93,11 +127,12 @@ new #[Layout('layouts.admin')] class extends Component {
 }; ?>
 
 <div class="p-6">
-    <div class="mb-8 flex justify-between items-end">
+    <div class="mb-6 flex justify-between items-end">
         <div>
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">Community Services</h1>
-            <p class="text-gray-500 dark:text-gray-400 mt-1">Manage scheduled community services for residents.</p>
+            <p class="text-gray-500 dark:text-gray-400 mt-1">Manage scheduled and ad-hoc community services.</p>
         </div>
+        @if($activeTab === 'catalog')
         <button wire:click="openCreateModal"
             class="bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-600/20 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 transform hover:-translate-y-0.5">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -105,6 +140,24 @@ new #[Layout('layouts.admin')] class extends Component {
             </svg>
             Add Service
         </button>
+        @endif
+    </div>
+
+    <div class="mb-6 border-b border-gray-200 dark:border-gray-700">
+        <ul class="flex flex-wrap -mb-px text-sm font-medium text-center text-gray-500 dark:text-gray-400">
+            <li class="mr-2">
+                <button wire:click="setTab('catalog')" class="inline-flex items-center justify-center p-4 border-b-2 rounded-t-lg group {{ $activeTab === 'catalog' ? 'text-indigo-600 border-indigo-600 dark:text-indigo-500 dark:border-indigo-500 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300' }}">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                    Services Catalog
+                </button>
+            </li>
+            <li class="mr-2">
+                <button wire:click="setTab('bookings')" class="inline-flex items-center justify-center p-4 border-b-2 rounded-t-lg group {{ $activeTab === 'bookings' ? 'text-indigo-600 border-indigo-600 dark:text-indigo-500 dark:border-indigo-500 active' : 'border-transparent hover:text-gray-600 hover:border-gray-300 dark:hover:text-gray-300' }}">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    Booking Requests
+                </button>
+            </li>
+        </ul>
     </div>
 
     @if (session()->has('success'))
@@ -116,6 +169,7 @@ new #[Layout('layouts.admin')] class extends Component {
         </div>
     @endif
 
+    @if($activeTab === 'catalog')
     <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div class="overflow-x-auto">
             <table class="w-full text-left text-sm whitespace-nowrap">
@@ -200,6 +254,81 @@ new #[Layout('layouts.admin')] class extends Component {
             </div>
         @endif
     </div>
+    @elseif($activeTab === 'bookings')
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm whitespace-nowrap">
+                <thead class="text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+                    <tr>
+                        <th class="px-8 py-5 font-bold uppercase tracking-wider text-xs">Resident</th>
+                        <th class="px-8 py-5 font-bold uppercase tracking-wider text-xs">Service Requested</th>
+                        <th class="px-8 py-5 font-bold uppercase tracking-wider text-xs">Date & Time</th>
+                        <th class="px-8 py-5 font-bold uppercase tracking-wider text-xs">Status</th>
+                        <th class="px-8 py-5 font-bold uppercase tracking-wider text-xs text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100 dark:divide-gray-700/50">
+                    @forelse ($bookings as $booking)
+                        <tr class="hover:bg-gray-50/80 dark:hover:bg-gray-700/30 transition-colors">
+                            <td class="px-8 py-5">
+                                <div class="font-bold text-gray-900 dark:text-white text-base">{{ $booking->user->name }}</div>
+                                <div class="text-xs text-gray-400 mt-0.5">Unit {{ $booking->user->unit_number ?? 'N/A' }}</div>
+                            </td>
+                            <td class="px-8 py-5 font-medium text-gray-900 dark:text-gray-300">
+                                {{ $booking->communityService->service_name }}
+                            </td>
+                            <td class="px-8 py-5 text-gray-700 dark:text-gray-400">
+                                <div class="font-bold">{{ \Carbon\Carbon::parse($booking->booking_date)->format('M d, Y') }}</div>
+                                @if($booking->requested_time)
+                                    <div class="text-xs mt-0.5">{{ $booking->requested_time }}</div>
+                                @endif
+                                @if($booking->notes)
+                                    <div class="text-xs text-indigo-400 mt-1 truncate max-w-xs" title="{{ $booking->notes }}">Notes: {{ $booking->notes }}</div>
+                                @endif
+                            </td>
+                            <td class="px-8 py-5">
+                                @if ($booking->status === 'approved')
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Approved</span>
+                                @elseif ($booking->status === 'rejected')
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">Rejected</span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">Pending</span>
+                                @endif
+                            </td>
+                            <td class="px-8 py-5 text-right">
+                                <div class="flex items-center justify-end gap-2 text-xs">
+                                    <button wire:click="viewBooking({{ $booking->id }})" 
+                                        class="text-blue-600 dark:text-blue-400 hover:text-white hover:bg-blue-600 dark:hover:bg-blue-500 bg-blue-50 dark:bg-blue-900/30 p-2 rounded-lg transition-all border border-blue-100 dark:border-blue-800"
+                                        title="View Details">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                        </svg>
+                                    </button>
+                                    @if ($booking->status === 'pending')
+                                        <button wire:click="updateBookingStatus({{ $booking->id }}, 'approved')" class="bg-green-500 hover:bg-green-600 text-white px-3 py-1.5 rounded-lg shadow-sm transition-colors font-bold">Approve</button>
+                                        <button wire:click="updateBookingStatus({{ $booking->id }}, 'rejected')" class="bg-gray-200 hover:bg-red-500 text-gray-700 hover:text-white dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-red-600 dark:hover:text-white px-3 py-1.5 rounded-lg shadow-sm transition-colors font-bold">Reject</button>
+                                    @endif
+                                </div>
+                            </td>
+                        </tr>
+                    @empty
+                        <tr>
+                            <td colspan="5" class="px-8 py-16 text-center text-gray-500 dark:text-gray-400">
+                                    <h3 class="text-lg font-medium text-gray-900 dark:text-gray-200 mb-1">No bookings yet</h3>
+                            </td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        @if ($bookings->hasPages())
+            <div class="px-8 py-4 border-t border-gray-100 dark:border-gray-700">
+                {{ $bookings->links() }}
+            </div>
+        @endif
+    </div>
+    @endif
 
     {{-- Create / Edit Modal --}}
     @if ($showModal)
@@ -268,6 +397,69 @@ new #[Layout('layouts.admin')] class extends Component {
                             Saving...
                         </span>
                     </button>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- View Booking Modal --}}
+    @if ($showViewModal && $viewingBooking)
+        <div class="fixed inset-0 z-[100] flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4 overflow-y-auto">
+            <div class="bg-white dark:bg-gray-800 rounded-[2rem] shadow-2xl w-full max-w-lg my-8 border border-gray-100 dark:border-gray-700 overflow-hidden relative">
+                
+                <div class="px-8 py-6 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-between items-center">
+                    <h3 class="text-xl font-bold text-gray-900 dark:text-white">Booking Details</h3>
+                    <button wire:click="closeViewModal" class="text-gray-400 hover:text-gray-700 dark:hover:text-white bg-white dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 p-2.5 rounded-full border border-gray-200 dark:border-gray-600 transition-all hover:rotate-90">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="p-8 space-y-6">
+                    <div class="flex items-center gap-4 p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800">
+                        <div class="w-12 h-12 rounded-full bg-indigo-600 flex items-center justify-center text-white font-bold text-xl">
+                            {{ strtoupper(substr($viewingBooking->user->name, 0, 1)) }}
+                        </div>
+                        <div>
+                            <div class="font-bold text-gray-900 dark:text-white text-lg">{{ $viewingBooking->user->name }}</div>
+                            <div class="text-sm text-gray-500">Resident of Unit {{ $viewingBooking->user->unit_number ?? 'N/A' }}</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700">
+                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Service</div>
+                            <div class="font-bold text-gray-900 dark:text-white">{{ $viewingBooking->communityService->service_name }}</div>
+                        </div>
+                        <div class="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700">
+                            <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</div>
+                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold uppercase
+                                {{ $viewingBooking->status === 'approved' ? 'bg-green-100 text-green-700' : ($viewingBooking->status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-yellow-100 text-yellow-700') }}">
+                                {{ $viewingBooking->status }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Requested Schedule</div>
+                        <div class="font-bold text-gray-900 dark:text-white">{{ \Carbon\Carbon::parse($viewingBooking->booking_date)->format('l, M d, Y') }}</div>
+                        <div class="text-sm text-gray-500 mt-0.5">{{ $viewingBooking->requested_time ?? 'No specific time slot' }}</div>
+                    </div>
+
+                    @if($viewingBooking->notes)
+                    <div class="p-4 rounded-2xl bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-700">
+                        <div class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Resident Notes</div>
+                        <p class="text-sm text-gray-700 dark:text-gray-300 italic leading-relaxed">"{{ $viewingBooking->notes }}"</p>
+                    </div>
+                    @endif
+
+                    @if($viewingBooking->status === 'pending')
+                    <div class="flex gap-3 pt-2">
+                        <button wire:click="updateBookingStatus({{ $viewingBooking->id }}, 'approved')" class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl shadow-lg shadow-green-600/20 transition-all transform hover:-translate-y-0.5">Approve Booking</button>
+                        <button wire:click="updateBookingStatus({{ $viewingBooking->id }}, 'rejected')" class="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-lg shadow-red-600/20 transition-all transform hover:-translate-y-0.5">Reject Booking</button>
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>

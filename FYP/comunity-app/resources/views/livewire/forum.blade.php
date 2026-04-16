@@ -221,7 +221,15 @@ new #[Layout('layouts.app')] class extends Component {
                                     @endif
                                     <div>
                                         <h3 style="margin: 0; font-weight: 700; color: white;">{{ $post->user->name }}</h3>
-                                        <span style="color: #64748b; font-size: 0.85rem;">{{ $post->created_at->diffForHumans() }}</span>
+                                        <div class="flex items-center gap-2 flex-wrap mt-0.5">
+                                            <span style="color: #64748b; font-size: 0.8rem;">{{ $post->created_at->diffForHumans() }}</span>
+                                            @if($post->user->street)
+                                                <span style="background: rgba(99,102,241,0.15); color: #a5b4fc; font-size: 0.7rem; font-weight: 600; padding: 1px 8px; border-radius: 99px; border: 1px solid rgba(99,102,241,0.2); display: inline-flex; align-items: center; gap: 4px;">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                    {{ $post->user->street }}{{ $post->user->block ? ' Blk '.$post->user->block : '' }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -283,18 +291,39 @@ new #[Layout('layouts.app')] class extends Component {
                                 
                                 <!-- Existing Comments -->
                                 @if($post->comments->count() > 0)
-                                    <div class="space-y-4 max-h-64 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                                    <div class="space-y-4 max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                                         @foreach($post->comments as $comment)
-                                            <div class="flex gap-3">
-                                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #475569; display: flex; align-items: center; justify-content: center; font-weight: bold; color: white; font-size: 0.75rem; flex-shrink: 0;">
-                                                    {{ $comment->user->initials() }}
-                                                </div>
-                                                <div class="bg-white/5 rounded-2xl rounded-tl-none px-4 py-3 flex-1">
-                                                    <div class="flex justify-between items-baseline mb-1">
-                                                        <span class="font-bold text-sm text-gray-200">{{ $comment->user->name }}</span>
-                                                        <span class="text-xs text-gray-500">{{ $comment->created_at->diffForHumans() }}</span>
+                                            <div class="flex gap-3 items-start">
+                                                {{-- Commenter Avatar --}}
+                                                @if($comment->user->profile_photo_path)
+                                                    <img src="{{ asset('storage/' . $comment->user->profile_photo_path) }}"
+                                                         style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid rgba(99,102,241,0.3);">
+                                                @else
+                                                    <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #475569, #334155); display: flex; align-items: center; justify-content: center; font-weight: 700; color: white; font-size: 0.75rem; flex-shrink: 0; border: 2px solid rgba(99,102,241,0.3);">
+                                                        {{ $comment->user->initials() }}
                                                     </div>
-                                                    <p class="text-sm text-gray-300">{{ $comment->content }}</p>
+                                                @endif
+
+                                                {{-- Comment Bubble --}}
+                                                <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.07); border-radius: 0 16px 16px 16px; padding: 12px 16px; flex: 1;">
+                                                    {{-- Header: name + location + time --}}
+                                                    <div class="flex flex-wrap items-center gap-x-2 gap-y-1 mb-2">
+                                                        <span style="font-weight: 700; font-size: 0.875rem; color: #e2e8f0;">{{ $comment->user->name }}</span>
+
+                                                        @if($comment->user->street || $comment->user->block || $comment->user->unit_number)
+                                                            <span style="background: rgba(99,102,241,0.15); color: #a5b4fc; font-size: 0.68rem; font-weight: 600; padding: 2px 8px; border-radius: 99px; border: 1px solid rgba(99,102,241,0.25); display: inline-flex; align-items: center; gap: 4px; white-space: nowrap;">
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                                                                @if($comment->user->unit_number) Unit {{ $comment->user->unit_number }}, @endif
+                                                                @if($comment->user->block) Blk {{ $comment->user->block }}, @endif
+                                                                {{ $comment->user->street }}
+                                                            </span>
+                                                        @endif
+
+                                                        <span style="color: #475569; font-size: 0.72rem; margin-left: auto;">{{ $comment->created_at->diffForHumans() }}</span>
+                                                    </div>
+
+                                                    {{-- Comment Text --}}
+                                                    <p style="color: #cbd5e1; font-size: 0.875rem; line-height: 1.6; margin: 0;">{{ $comment->content }}</p>
                                                 </div>
                                             </div>
                                         @endforeach

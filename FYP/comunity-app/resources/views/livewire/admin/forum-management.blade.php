@@ -10,25 +10,25 @@ use Illuminate\Support\Facades\Storage;
 new #[Layout('layouts.admin')] class extends Component {
     use WithPagination;
 
-    public $viewPostId = null;
-    public $viewPost = null;
+    public ?int $viewPostId = null;
 
     public function with()
     {
         return [
             'posts' => ForumPost::with(['user'])->withCount('comments')->latest()->paginate(15),
+            'viewPost' => $this->viewPostId 
+                ? ForumPost::with(['user', 'comments.user'])->find($this->viewPostId)
+                : null,
         ];
     }
 
     public function viewPost($id)
     {
-        $this->viewPost = ForumPost::with(['user', 'comments.user'])->findOrFail($id);
         $this->viewPostId = $id;
     }
 
     public function closeModal()
     {
-        $this->viewPost = null;
         $this->viewPostId = null;
     }
 
@@ -43,19 +43,16 @@ new #[Layout('layouts.admin')] class extends Component {
         ForumComment::where('forum_post_id', $post->id)->delete();
         $post->delete();
 
-        $this->closeModal();
+        if ($this->viewPostId == $id) {
+            $this->closeModal();
+        }
+        
         session()->flash('success', 'Post and all its comments have been deleted.');
     }
 
     public function deleteComment($id)
     {
         ForumComment::findOrFail($id)->delete();
-
-        // Refresh the viewPost data
-        if ($this->viewPostId) {
-            $this->viewPost = ForumPost::with(['user', 'comments.user'])->find($this->viewPostId);
-        }
-
         session()->flash('success', 'Comment deleted successfully.');
     }
 }; ?>
