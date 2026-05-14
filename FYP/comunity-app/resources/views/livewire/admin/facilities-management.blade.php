@@ -500,7 +500,6 @@ new #[Layout('layouts.admin')] class extends Component {
             </div>
         </div>
     @endif
-    @endif
 
     {{-- View Booking Modal --}}
     @if ($showViewBookingModal && $viewingBooking)
