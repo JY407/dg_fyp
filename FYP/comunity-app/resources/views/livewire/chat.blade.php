@@ -1,11 +1,40 @@
-<div x-data="{ showProfileInfo: false }">
+<div x-data="{ showProfileInfo: false }" x-init="initTranslation()">
     <div style="padding-top: 100px; padding-bottom: 40px; height: 100vh; display: flex; flex-direction: column;">
         <div class="container" style="flex: 1; display: flex; flex-direction: column; max-width: 100%;">
 
             <!-- Header -->
-            <div class="mb-4">
-                <h1 class="mb-2">{{ __('Messages') }}</h1>
-                <p class="text-secondary">{{ __('Chat with your neighbors and community groups.') }}</p>
+            <div class="mb-4 flex items-start justify-between gap-4 flex-wrap">
+                <div>
+                    <h1 class="mb-2">{{ __('Messages') }}</h1>
+                    <p class="text-secondary">{{ __('Chat with your neighbors and community groups.') }}</p>
+                </div>
+
+                <!-- Language Translation Selector -->
+                <div class="flex items-center gap-2 flex-shrink-0" id="translation-widget">
+                    <div class="flex items-center gap-2 glass-card px-3 py-2" style="border-radius: 50px; border: 1px solid rgba(139,92,246,0.3);">
+                        <span class="text-lg" id="translate-globe-icon">🌐</span>
+                        <span class="text-xs font-semibold text-secondary uppercase tracking-wider hidden sm:inline">Translate to</span>
+                        <select id="translation-target-lang"
+                            class="bg-transparent border-none outline-none text-sm font-semibold text-white cursor-pointer"
+                            style="background: transparent;"
+                            onchange="setTranslationLanguage(this.value)">
+                            <option value="" style="background:#1e1e2e;">— Off —</option>
+                            <option value="ms" style="background:#1e1e2e;">🇲🇾 Malay</option>
+                            <option value="en" style="background:#1e1e2e;">🇬🇧 English</option>
+                            <option value="zh-CN" style="background:#1e1e2e;">🇨🇳 Chinese (Simplified)</option>
+                            <option value="zh-TW" style="background:#1e1e2e;">🇹🇼 Chinese (Traditional)</option>
+                            <option value="ta" style="background:#1e1e2e;">🇮🇳 Tamil</option>
+                            <option value="hi" style="background:#1e1e2e;">🇮🇳 Hindi</option>
+                            <option value="ar" style="background:#1e1e2e;">🇸🇦 Arabic</option>
+                            <option value="ja" style="background:#1e1e2e;">🇯🇵 Japanese</option>
+                            <option value="ko" style="background:#1e1e2e;">🇰🇷 Korean</option>
+                            <option value="fr" style="background:#1e1e2e;">🇫🇷 French</option>
+                            <option value="de" style="background:#1e1e2e;">🇩🇪 German</option>
+                        </select>
+                        <div id="translate-spinner" class="hidden w-4 h-4 rounded-full border-2 border-purple-500 border-t-transparent animate-spin"></div>
+                    </div>
+                    <div id="translate-status" class="text-xs text-purple-400 hidden"></div>
+                </div>
             </div>
 
             <!-- Chat Container (Vertical Stack) -->
@@ -118,20 +147,36 @@
 
 
                     <!-- Messages -->
-                    <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-[rgba(0,0,0,0.1)]">
+                    <div class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-[rgba(0,0,0,0.1)]" id="chat-messages-container">
                         @foreach ($chatMessages as $message)
-                            <div class="flex {{$message->sender_id === auth()->id() ? 'justify-end' : 'justify-start'}} animate-fade-in-up">
+                            @php $isOwn = $message->sender_id === auth()->id(); @endphp
+                            <div class="flex {{$isOwn ? 'justify-end' : 'justify-start'}} animate-fade-in-up">
                                 <div class="max-w-[70%]">
-                                    @if($isGroupChat && $message->sender_id !== auth()->id())
+                                    @if($isGroupChat && !$isOwn)
                                         <div class="text-xs text-secondary mb-1 ml-1">{{ $message->sender->name }}</div>
                                     @endif
-                                    <div class="px-5 py-3 rounded-2xl shadow-md text-sm leading-relaxed
-                                        {{$message->sender_id === auth()->id()
-                                            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-br-none'
-                                            : 'bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.1)] rounded-bl-none'}}">
-                                        {{$message->message}}
+                                    <div class="relative group/msg">
+                                        <div class="px-5 py-3 rounded-2xl shadow-md text-sm leading-relaxed
+                                            {{$isOwn
+                                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-br-none'
+                                                : 'bg-[rgba(255,255,255,0.1)] text-white border border-[rgba(255,255,255,0.1)] rounded-bl-none'}}"
+                                            id="msg-bubble-{{ $message->id }}">
+                                            <span class="msg-original-text" data-original="{{ $message->message }}">{{ $message->message }}</span>
+                                        </div>
+                                        @if(!$isOwn)
+                                        <!-- Translate Button for received messages -->
+                                        <button
+                                            onclick="translateMessage('{{ $message->id }}', this)"
+                                            data-msg-id="{{ $message->id }}"
+                                            data-translated="false"
+                                            class="translate-btn mt-1 ml-1 flex items-center gap-1 text-[10px] text-purple-400/60 hover:text-purple-300 transition-all duration-200 opacity-0 group-hover/msg:opacity-100"
+                                            title="Translate message">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+                                            <span class="translate-btn-label">Translate</span>
+                                        </button>
+                                        @endif
                                     </div>
-                                    <div class="text-[10px] text-white/30 mt-1 {{ $message->sender_id === auth()->id() ? 'text-right mr-1' : 'ml-1' }}">
+                                    <div class="text-[10px] text-white/30 mt-1 {{ $isOwn ? 'text-right mr-1' : 'ml-1' }}">
                                         {{ $message->created_at->format('h:i A') }}
                                     </div>
                                 </div>
@@ -363,10 +408,240 @@
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
         }
+
+        /* Translation Styles */
+        #translation-widget select option {
+            background-color: #1e1e2e;
+            color: #fff;
+        }
+
+        .translate-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 6px;
+        }
+
+        .translate-btn:hover {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .translated-badge {
+            display: inline-block;
+            font-size: 9px;
+            background: rgba(139, 92, 246, 0.25);
+            color: #a78bfa;
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            border-radius: 4px;
+            padding: 1px 5px;
+            margin-left: 6px;
+            vertical-align: middle;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+
+        .msg-translating {
+            opacity: 0.6;
+            transition: opacity 0.2s;
+        }
+
+        @keyframes translatePulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        .translate-active-indicator {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #a78bfa;
+            border-radius: 50%;
+            margin-right: 4px;
+            animation: translatePulse 1.5s infinite;
+        }
     </style>
 
     <script>
+        // ─── Translation State ───────────────────────────────────────────────
+        let currentTranslationLang = '';
+        const translationCache = {}; // { "msgId_lang": "translated text" }
+
+        function initTranslation() {
+            // Restore saved language preference
+            const saved = localStorage.getItem('chat_translate_lang') || '';
+            currentTranslationLang = saved;
+            const sel = document.getElementById('translation-target-lang');
+            if (sel && saved) {
+                sel.value = saved;
+                updateTranslateStatus(saved);
+            }
+        }
+
+        function setTranslationLanguage(lang) {
+            currentTranslationLang = lang;
+            localStorage.setItem('chat_translate_lang', lang);
+            updateTranslateStatus(lang);
+
+            // Restore all messages to original when turning off
+            if (!lang) {
+                document.querySelectorAll('.msg-original-text').forEach(span => {
+                    span.innerHTML = span.dataset.original;
+                    const badge = span.parentElement.querySelector('.translated-badge');
+                    if (badge) badge.remove();
+                });
+                document.querySelectorAll('.translate-btn').forEach(btn => {
+                    btn.dataset.translated = 'false';
+                    btn.querySelector('.translate-btn-label').textContent = 'Translate';
+                });
+                return;
+            }
+
+            // Auto-translate all visible received messages if a lang is set
+            document.querySelectorAll('.translate-btn').forEach(btn => {
+                if (btn.dataset.translated !== 'true') {
+                    translateMessage(btn.dataset.msgId, btn);
+                }
+            });
+        }
+
+        function updateTranslateStatus(lang) {
+            const statusEl = document.getElementById('translate-status');
+            const globeEl = document.getElementById('translate-globe-icon');
+            if (!statusEl) return;
+            if (lang) {
+                const labels = { ms: 'Malay', en: 'English', 'zh-CN': 'Chinese (Simplified)', 'zh-TW': 'Chinese (Traditional)', ta: 'Tamil', hi: 'Hindi', ar: 'Arabic', ja: 'Japanese', ko: 'Korean', fr: 'French', de: 'German' };
+                statusEl.textContent = `Auto-translating to ${labels[lang] || lang}`;
+                statusEl.classList.remove('hidden');
+                if (globeEl) globeEl.style.animation = 'translatePulse 2s infinite';
+            } else {
+                statusEl.classList.add('hidden');
+                if (globeEl) globeEl.style.animation = '';
+            }
+        }
+
+        async function translateMessage(msgId, btnEl) {
+            if (!currentTranslationLang) {
+                showNoLangToast();
+                return;
+            }
+
+            const bubbleEl = document.getElementById(`msg-bubble-${msgId}`);
+            if (!bubbleEl) return;
+
+            const textSpan = bubbleEl.querySelector('.msg-original-text');
+            if (!textSpan) return;
+
+            const originalText = textSpan.dataset.original;
+            const isTranslated = btnEl.dataset.translated === 'true';
+            const btnLabel = btnEl.querySelector('.translate-btn-label');
+
+            // Toggle back to original
+            if (isTranslated) {
+                textSpan.innerHTML = escapeHtml(originalText);
+                const badge = bubbleEl.querySelector('.translated-badge');
+                if (badge) badge.remove();
+                btnEl.dataset.translated = 'false';
+                btnLabel.textContent = 'Translate';
+                return;
+            }
+
+            const cacheKey = `${msgId}_${currentTranslationLang}`;
+
+            // Use cache if available
+            if (translationCache[cacheKey]) {
+                applyTranslation(textSpan, bubbleEl, btnEl, btnLabel, translationCache[cacheKey]);
+                return;
+            }
+
+            // Show loading state
+            btnLabel.textContent = 'Translating...';
+            btnEl.disabled = true;
+            textSpan.classList.add('msg-translating');
+
+            try {
+                // Using Google Translate unofficial API (supports auto language detection)
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${currentTranslationLang}&dt=t&q=${encodeURIComponent(originalText)}`;
+                const response = await fetch(url);
+
+                if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+
+                const data = await response.json();
+
+                // Response format: [ [ ["translated", "original", ...], ... ], ..., "detected_lang" ]
+                if (data && data[0] && data[0][0] && data[0][0][0]) {
+                    const translated = data[0].map(part => part[0]).join('');
+                    translationCache[cacheKey] = translated;
+                    applyTranslation(textSpan, bubbleEl, btnEl, btnLabel, translated);
+                } else {
+                    throw new Error('Unexpected response format');
+                }
+            } catch (err) {
+                console.error('Translation error:', err);
+                btnLabel.textContent = 'Failed – retry';
+                btnEl.disabled = false;
+                textSpan.classList.remove('msg-translating');
+                showTranslationError();
+            }
+        }
+
+        function applyTranslation(textSpan, bubbleEl, btnEl, btnLabel, translatedText) {
+            textSpan.classList.remove('msg-translating');
+            textSpan.innerHTML = escapeHtml(translatedText);
+
+            // Remove old badge if any, then add new one
+            const oldBadge = bubbleEl.querySelector('.translated-badge');
+            if (oldBadge) oldBadge.remove();
+
+            const badge = document.createElement('span');
+            badge.className = 'translated-badge';
+            badge.textContent = 'translated';
+            textSpan.appendChild(badge);
+
+            btnEl.dataset.translated = 'true';
+            btnEl.disabled = false;
+            btnLabel.textContent = 'Show original';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.appendChild(document.createTextNode(text));
+            return div.innerHTML;
+        }
+
+        function showNoLangToast() {
+            showToast('Please select a language to translate to first.', 'warning');
+        }
+
+        function showTranslationError() {
+            showToast('Translation failed. Please try again.', 'error');
+        }
+
+        function showToast(message, type = 'info') {
+            const colors = { info: '#6366f1', warning: '#f59e0b', error: '#ef4444', success: '#22c55e' };
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+                background: rgba(15,15,25,0.95); color: white; padding: 10px 20px;
+                border-radius: 50px; font-size: 13px; font-weight: 500; z-index: 9999;
+                border: 1px solid ${colors[type]}40; box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+                backdrop-filter: blur(12px); animation: fadeInUp 0.3s ease-out;
+                display: flex; align-items: center; gap: 8px;
+            `;
+            toast.innerHTML = `<span style="color:${colors[type]};font-size:16px;">${type === 'warning' ? '⚠️' : type === 'error' ? '❌' : 'ℹ️'}</span> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.3s';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // ─── Livewire / Echo ─────────────────────────────────────────────────
         document.addEventListener('livewire:initialized', () => {
+            initTranslation();
+
             Livewire.on('userTyping', (event) => {
                 console.log(event);
                 window.Echo.private(`chat.${event.selectedUserID}`).whisper("typing", {
@@ -386,18 +661,24 @@
             });
 
             // Auto-scroll to bottom of chat
-            const chatContainer = document.querySelectorAll('.custom-scrollbar')[1]; // Adjust index if needed or use ID
+            const chatContainer = document.getElementById('chat-messages-container');
             if (chatContainer) {
                 chatContainer.scrollTop = chatContainer.scrollHeight;
             }
             
             Livewire.on('messageSent', () => {
-                 const chatContainer = document.querySelectorAll('.custom-scrollbar')[1];
-                 if (chatContainer) {
+                const chatContainer = document.getElementById('chat-messages-container');
+                if (chatContainer) {
                     setTimeout(() => {
                         chatContainer.scrollTop = chatContainer.scrollHeight;
-                    }, 100);
-                 }
+                        // Auto-translate new messages if language is active
+                        if (currentTranslationLang) {
+                            document.querySelectorAll('.translate-btn[data-translated="false"]').forEach(btn => {
+                                translateMessage(btn.dataset.msgId, btn);
+                            });
+                        }
+                    }, 200);
+                }
             });
         });
     </script>
