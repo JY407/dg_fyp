@@ -105,9 +105,9 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     @endif
 
-    <div class="px-6 pb-10 flex flex-col xl:flex-row gap-8 items-start">
+    <div class="px-6 pb-10 flex flex-row gap-8 items-start">
         <div class="flex-1 w-full">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="grid grid-cols-2 gap-5">
             @forelse($services as $service)
                 @php
                     $colorMap = [
@@ -201,7 +201,7 @@ new #[Layout('layouts.app')] class extends Component {
 
         <!-- Sidebar for Your Bookings -->
         @auth
-        <div class="w-full xl:w-80 shrink-0">
+        <div class="w-80 shrink-0">
             <div class="bg-gray-800/80 backdrop-blur-xl rounded-3xl border border-gray-700/50 p-6 relative overflow-hidden group shadow-lg">
                 <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl -mr-16 -mt-16 transition-all group-hover:bg-blue-500/20"></div>
                 
@@ -242,49 +242,67 @@ new #[Layout('layouts.app')] class extends Component {
         @endauth
     </div>
 
-    <!-- Booking Modal -->
+    {{-- Booking Modal --}}
     @if($showBookingModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/80 backdrop-blur-sm p-4 sm:p-0">
-            <div class="relative w-full max-w-lg bg-gray-800 rounded-3xl shadow-2xl border border-gray-700 p-8 transform transition-all animate-fade-in-up">
-                
-                <div class="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+            <div class="relative w-full max-w-md bg-gray-900 rounded-3xl shadow-2xl border border-white/10 flex flex-col max-h-[90vh]">
 
-                <div class="flex justify-between items-start mb-6 border-b border-gray-700/50 pb-6 relative z-10">
-                    <div>
-                        <h3 class="text-2xl font-bold text-white mb-1">Book Service</h3>
-                        <p class="text-blue-400 text-sm font-medium">{{ $selectedServiceName }}</p>
-                    </div>
-                    <button wire:click="closeBookingModal" class="text-gray-500 hover:text-white bg-gray-900 hover:bg-gray-700 p-2 rounded-full transition-colors border border-gray-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
-                </div>
-
-                <form wire:submit="submitBooking" class="space-y-5 relative z-10">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-300 mb-2">Preferred Date</label>
-                        <input wire:model="booking_date" type="date" class="w-full rounded-xl border-gray-600 bg-gray-900 text-white shadow-inner focus:border-blue-500 focus:ring-blue-500 p-3 color-scheme-dark">
-                        @error('booking_date') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-300 mb-2">Preferred Time / Slot</label>
-                        <input wire:model="requested_time" type="text" placeholder="e.g. Morning, 2:00 PM" class="w-full rounded-xl border-gray-600 bg-gray-900 text-white shadow-inner focus:border-blue-500 focus:ring-blue-500 p-3">
-                        @error('requested_time') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-sm font-bold text-gray-300 mb-2">Additional Notes</label>
-                        <textarea wire:model="notes" rows="3" placeholder="Tell us exactly what you need help with..." class="w-full rounded-xl border-gray-600 bg-gray-900 text-white shadow-inner focus:border-blue-500 focus:ring-blue-500 p-3"></textarea>
-                        @error('notes') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="pt-6 mt-2 border-t border-gray-700/50">
-                        <button type="submit" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl shadow-[0_0_15px_rgba(59,130,246,0.4)] transition-all flex justify-center items-center gap-2">
-                            <svg wire:loading wire:target="submitBooking" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            Confirm Request
+                {{-- Gradient Header --}}
+                <div class="relative flex-shrink-0 bg-gradient-to-r from-blue-700 via-purple-700 to-indigo-800 px-8 pt-7 pb-6 rounded-t-3xl overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="relative flex justify-between items-start">
+                        <div>
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/10 border border-white/20 text-blue-200 mb-3 uppercase tracking-wider">
+                                🛠️ Service Request
+                            </span>
+                            <h3 class="text-2xl font-black text-white tracking-tight">Book Service</h3>
+                            <p class="text-sm text-blue-200/80 mt-1">{{ $selectedServiceName }}</p>
+                        </div>
+                        <button wire:click="closeBookingModal" class="text-white/60 hover:text-white bg-white/10 hover:bg-white/20 p-2.5 rounded-full transition-all duration-300 border border-white/10 hover:rotate-90 shrink-0 ml-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                         </button>
                     </div>
-                </form>
+                </div>
+
+                {{-- Form Body --}}
+                <div class="overflow-y-auto flex-1">
+                    <form wire:submit="submitBooking" class="p-7 space-y-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Preferred Date <span class="text-red-400">*</span></label>
+                            <input wire:model="booking_date" type="date" required
+                                class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" style="color-scheme:dark">
+                            @error('booking_date') <span class="text-red-400 text-xs mt-1.5 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Preferred Time / Slot <span class="text-gray-500 font-normal text-xs">(Optional)</span></label>
+                            <input wire:model="requested_time" type="text" placeholder="e.g. Morning, 2:00 PM"
+                                class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all">
+                            @error('requested_time') <span class="text-red-400 text-xs mt-1.5 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Additional Notes <span class="text-gray-500 font-normal text-xs">(Optional)</span></label>
+                            <textarea wire:model="notes" rows="3" placeholder="Tell us exactly what you need help with..."
+                                class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"></textarea>
+                            @error('notes') <span class="text-red-400 text-xs mt-1.5 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="flex items-center gap-3 pt-2 border-t border-gray-700/60">
+                            <button type="button" wire:click="closeBookingModal"
+                                class="flex-1 px-5 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 font-semibold rounded-xl transition-all text-sm">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="flex-1 px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg shadow-purple-900/40 transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm">
+                                <svg wire:loading wire:target="submitBooking" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <svg wire:loading.remove wire:target="submitBooking" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                <span wire:loading.remove wire:target="submitBooking">Confirm Request</span>
+                                <span wire:loading wire:target="submitBooking">Submitting...</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     @endif

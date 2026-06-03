@@ -123,7 +123,7 @@ new #[Layout('layouts.app')] class extends Component {
     }
 }; ?>
 
-<div style="background-color: #0f0f23 !important; min-height: 100vh; padding-top: 80px; font-family: 'Outfit', sans-serif; color: white;">
+<div style="background-color: #0f172a; min-height: 100vh; padding-top: 24px; font-family: 'Inter', sans-serif; color: white;">
 
     <!-- Background Ambient Glow -->
     <div style="position: fixed; top: 20%; left: 20%; width: 300px; height: 300px; background: #764ba2; filter: blur(150px); opacity: 0.2; pointer-events: none; z-index: 0;"></div>

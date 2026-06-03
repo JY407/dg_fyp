@@ -1,4 +1,26 @@
 <aside class="sidebar">
+    @php
+        $securityPerms = [];
+        if (auth()->check() && auth()->user()->user_type === 'security') {
+            $filePath = 'security_permissions.json';
+            if (\Illuminate\Support\Facades\Storage::exists($filePath)) {
+                $securityPerms = json_decode(\Illuminate\Support\Facades\Storage::get($filePath), true);
+            } else {
+                $securityPerms = [
+                    'dashboard'     => true,
+                    'visitors'      => true,
+                    'duty_roster'   => true,
+                    'emergency'     => true,
+                    'services'      => false,
+                    'facilities'    => false,
+                    'culture'       => false,
+                    'announcements' => true,
+                    'chat'          => true,
+                    'forum'         => false
+                ];
+            }
+        }
+    @endphp
     <div class="sidebar-header">
         <a href="{{ route('home') }}" class="sidebar-brand">
             <div class="sidebar-logo">LC</div>
@@ -17,6 +39,7 @@
                 <span>{{ __('app.nav_home') }}</span>
             </a>
         </li>
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['dashboard'] ?? false))
         <li>
             <a href="{{ route('dashboard') }}"
                 class="sidebar-link {{ request()->routeIs('dashboard') ? 'active' : '' }}">
@@ -30,6 +53,8 @@
                 <span>{{ __('app.nav_dashboard') }}</span>
             </a>
         </li>
+        @endif
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['announcements'] ?? false))
         <li>
             <a href="{{ route('announcements') }}"
                 class="sidebar-link {{ request()->routeIs('announcements') ? 'active' : '' }}">
@@ -41,6 +66,8 @@
                 <span>{{ __('app.nav_announcements') }}</span>
             </a>
         </li>
+        @endif
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['duty_roster'] ?? false))
         <li>
             <a href="{{ route('events') }}" class="sidebar-link {{ request()->routeIs('events') ? 'active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -53,6 +80,8 @@
                 <span>{{ __('app.nav_events') }}</span>
             </a>
         </li>
+        @endif
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['culture'] ?? false))
         <li>
             <a href="{{ route('culture') }}" class="sidebar-link {{ request()->routeIs('culture') ? 'active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -63,6 +92,8 @@
                 <span>{{ __('app.nav_culture') }}</span>
             </a>
         </li>
+        @endif
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['forum'] ?? false))
         <li>
             <a href="{{ route('forum') }}" class="sidebar-link {{ request()->routeIs('forum') ? 'active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -74,6 +105,8 @@
                 <span>{{ __('app.nav_forum') }}</span>
             </a>
         </li>
+        @endif
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['chat'] ?? false))
         <li>
             <a href="{{ route('chat') }}" class="sidebar-link {{ request()->routeIs('chat') ? 'active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -83,6 +116,8 @@
                 <span>{{ __('app.nav_chat') }}</span>
             </a>
         </li>
+        @endif
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['visitors'] ?? false))
         <li>
             <a href="{{ route('visitors.index') }}"
                 class="sidebar-link {{ request()->routeIs('visitors.*') ? 'active' : '' }}">
@@ -96,6 +131,7 @@
                 <span>{{ __('app.nav_visitors') }}</span>
             </a>
         </li>
+        @endif
         <li>
             <a href="{{ route('contact') }}" class="sidebar-link {{ request()->routeIs('contact') ? 'active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -106,6 +142,7 @@
                 <span>{{ __('app.nav_contact') }}</span>
             </a>
         </li>
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['services'] ?? false))
         <li>
             <a href="{{ route('services') }}" class="sidebar-link {{ request()->routeIs('services') ? 'active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -117,6 +154,8 @@
                 <span>{{ __('app.nav_services') }}</span>
             </a>
         </li>
+        @endif
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['facilities'] ?? false))
         <li>
             <a href="{{ route('facilities') }}" class="sidebar-link {{ request()->routeIs('facilities') ? 'active' : '' }}">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -132,6 +171,8 @@
                 <span>{{ __('app.nav_facilities') }}</span>
             </a>
         </li>
+        @endif
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['emergency'] ?? false))
         <li>
             <a href="{{ route('emergency') }}"
                 class="sidebar-link {{ request()->routeIs('emergency') ? 'active' : '' }}" style="color: #ef4444;">
@@ -145,6 +186,7 @@
                 <span>{{ __('app.nav_emergency') }}</span>
             </a>
         </li>
+        @endif
     </ul>
 
     {{-- Language Switcher --}}

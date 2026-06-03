@@ -76,6 +76,7 @@ Route::middleware(['auth', \App\Http\Middleware\IsAdmin::class])->prefix('admin'
     Volt::route('road-notices', 'admin.road-notices')->name('road-notices');
     Volt::route('forum', 'admin.forum-management')->name('forum-management');
     Volt::route('emergencies', 'admin.emergencies-management')->name('emergencies-management');
+    Volt::route('security-permissions', 'admin.security-permissions')->name('security-permissions');
 });
 
 // Public Visitor Pass (No Auth Required) - For Real-time Tracking

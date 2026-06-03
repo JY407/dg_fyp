@@ -15,7 +15,7 @@ class EnsureNotAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check() && auth()->user()->user_type === 'admin') {
+        if (auth()->check() && (auth()->user()->user_type === 'admin' || auth()->user()->user_type === 'security')) {
             return redirect()->route('admin.dashboard');
         }
 

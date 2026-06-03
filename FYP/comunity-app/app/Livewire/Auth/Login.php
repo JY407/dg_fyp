@@ -62,7 +62,7 @@ class Login extends Component
 
             \Log::info('Session regenerated, redirecting to dashboard');
 
-            if ($user->user_type === 'admin') {
+            if ($user->user_type === 'admin' || $user->user_type === 'security') {
                 $this->redirectIntended(default: route('admin.dashboard', absolute: false), navigate: true);
                 return;
             }

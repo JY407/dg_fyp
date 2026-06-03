@@ -478,108 +478,155 @@ new #[Layout('layouts.admin')] class extends Component {
          CREATE / EDIT MODAL
     ════════════════════════════════════════════════════════ --}}
     @if($showModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style="background:rgba(0,0,0,.65); backdrop-filter:blur(4px);">
-            <div class="w-full max-w-xl rounded-2xl border border-slate-700/60 shadow-2xl overflow-hidden"
-                style="background:#1e293b;" wire:click.stop>
-
-                {{-- Modal header --}}
-                <div class="px-6 py-4 border-b border-slate-700/50 flex items-center justify-between"
-                    style="background:#0f172a;">
-                    <h3 class="text-base font-bold text-white">
-                        {{ $editingId ? 'Edit Event' : 'Create New Event' }}
-                    </h3>
-                    <button wire:click="$set('showModal', false)"
-                        class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 transition-all">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/80 backdrop-blur-sm p-4 md:p-6 transition-all duration-300">
+            <div class="relative w-full max-w-4xl bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-6 md:p-10 transform transition-all duration-300 overflow-hidden" wire:click.stop>
+                
+                <!-- Header -->
+                <div class="relative z-10 flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-6 mb-8">
+                    <div>
+                        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-100 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-400 mb-2">
+                            Administrative Console
+                        </span>
+                        <h3 class="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
+                            📝 {{ $editingId ? 'Edit Event' : 'Create New Event' }}
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Directly manage, customize, and publish community events.</p>
+                    </div>
+                    <button wire:click="$set('showModal', false)" class="text-gray-400 hover:text-gray-600 dark:hover:text-white bg-gray-100 dark:bg-gray-900 hover:bg-gray-200 dark:hover:bg-gray-700 p-2.5 rounded-full transition-all duration-300 border border-gray-200 dark:border-gray-700 shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                         </svg>
                     </button>
                 </div>
 
-                {{-- Modal body --}}
-                <form wire:submit="save" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
-
-                    @php $inputClass = "w-full px-4 py-2.5 rounded-xl border border-slate-600 text-slate-100 text-sm placeholder-slate-500 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all"; $inputStyle = "background:#0f172a;"; @endphp
-
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Title *</label>
-                        <input wire:model="title" type="text" placeholder="Event title" class="{{ $inputClass }}" style="{{ $inputStyle }}">
-                        @error('title') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Description *</label>
-                        <textarea wire:model="description" rows="3" placeholder="Describe the event…"
-                            class="{{ $inputClass }}" style="{{ $inputStyle }} resize-none;"></textarea>
-                        @error('description') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div class="grid grid-cols-3 gap-3">
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Date *</label>
-                            <input wire:model="event_date" type="date" class="{{ $inputClass }}" style="{{ $inputStyle }}">
-                            @error('event_date') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Start *</label>
-                            <input wire:model="start_time" type="time" class="{{ $inputClass }}" style="{{ $inputStyle }}">
-                            @error('start_time') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div>
-                            <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">End *</label>
-                            <input wire:model="end_time" type="time" class="{{ $inputClass }}" style="{{ $inputStyle }}">
-                            @error('end_time') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Location *</label>
-                        <input wire:model="location" type="text" placeholder="e.g. Community Hall, Block A" class="{{ $inputClass }}" style="{{ $inputStyle }}">
-                        @error('location') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
-                    </div>
-
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Status</label>
-                        <select wire:model="status" class="{{ $inputClass }}" style="{{ $inputStyle }}">
-                            <option value="approved">Approved</option>
-                            <option value="pending">Pending</option>
-                            <option value="rejected">Rejected</option>
-                        </select>
-                    </div>
-
-                    {{-- Image Upload --}}
-                    <div>
-                        <label class="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">Event Image</label>
-                        @if($existingImage && !$image)
-                            <div class="mb-2 flex items-center gap-3 p-2 rounded-lg border border-slate-700" style="background:#0f172a;">
-                                <img src="{{ asset('storage/'.$existingImage) }}" class="w-16 h-10 rounded-lg object-cover">
-                                <p class="text-xs text-slate-400">Current image</p>
+                <!-- Body -->
+                <form wire:submit="save" class="relative z-10 space-y-8 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+                        
+                        <!-- Left Column (3/5 cols) -->
+                        <div class="lg:col-span-3 space-y-6">
+                            <!-- Title -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Event Title <span class="text-red-500">*</span></label>
+                                <input wire:model="title" type="text" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none" placeholder="Event title">
+                                @error('title') <p class="text-red-550 text-xs mt-1 block font-medium">{{ $message }}</p> @enderror
                             </div>
-                        @endif
-                        @if($image)
-                            <div class="mb-2 flex items-center gap-3 p-2 rounded-lg border border-indigo-700/40" style="background:#0f172a;">
-                                <img src="{{ $image->temporaryUrl() }}" class="w-16 h-10 rounded-lg object-cover">
-                                <p class="text-xs text-slate-400">New image preview</p>
+
+                            <!-- Date & Location -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <!-- Date -->
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Date <span class="text-red-500">*</span></label>
+                                    <input wire:model="event_date" type="date" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none color-scheme-dark">
+                                    @error('event_date') <p class="text-red-550 text-xs mt-1 block font-medium">{{ $message }}</p> @enderror
+                                </div>
+
+                                <!-- Location -->
+                                <div class="space-y-2">
+                                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Location <span class="text-red-500">*</span></label>
+                                    <input wire:model="location" type="text" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none" placeholder="e.g. Block A Community Center">
+                                    @error('location') <p class="text-red-550 text-xs mt-1 block font-medium">{{ $message }}</p> @enderror
+                                </div>
                             </div>
-                        @endif
-                        <input wire:model="image" type="file" accept="image/*"
-                            class="w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-bold file:text-white file:cursor-pointer transition-all"
-                            style="file-bg:rgba(99,102,241,.8);">
-                        @error('image') <p class="text-red-400 text-xs mt-1">{{ $message }}</p> @enderror
+
+                            <!-- Timing Card -->
+                            <div class="bg-gray-50 dark:bg-gray-900/40 border border-gray-250 dark:border-gray-750 rounded-lg p-5 space-y-4">
+                                <div class="flex items-center gap-2 text-purple-600 dark:text-purple-400 font-bold text-xs uppercase tracking-wider">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Timing Details
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="space-y-1.5">
+                                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">Start Time <span class="text-red-500">*</span></label>
+                                        <input wire:model="start_time" type="time" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none color-scheme-dark text-sm">
+                                        @error('start_time') <p class="text-red-550 text-xs mt-1 block font-medium">{{ $message }}</p> @enderror
+                                    </div>
+                                    <div class="space-y-1.5">
+                                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1.5">End Time <span class="text-red-500">*</span></label>
+                                        <input wire:model="end_time" type="time" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none color-scheme-dark text-sm">
+                                        @error('end_time') <p class="text-red-550 text-xs mt-1 block font-medium">{{ $message }}</p> @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Status Select -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Publish Status</label>
+                                <div class="relative">
+                                    <select wire:model="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none appearance-none cursor-pointer">
+                                        <option value="approved">Approved / Live</option>
+                                        <option value="pending">Pending Admin Review</option>
+                                        <option value="rejected">Rejected / Hidden</option>
+                                    </select>
+                                    <div class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column (2/5 cols) -->
+                        <div class="lg:col-span-2 space-y-6">
+                            <!-- Image -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Event Image</label>
+                                @if($existingImage && !$image)
+                                    <div class="relative group rounded-lg overflow-hidden border border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60 p-2 transition-all duration-300 shadow-md">
+                                        <img src="{{ asset('storage/'.$existingImage) }}" class="object-cover w-full h-[154px] rounded-md shadow-inner">
+                                        <div class="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                            <label class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold rounded-lg cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-lg">
+                                                Replace Image
+                                                <input wire:model="image" type="file" class="hidden" accept="image/*">
+                                            </label>
+                                        </div>
+                                    </div>
+                                @elseif($image)
+                                    <div class="relative group rounded-lg overflow-hidden border border-purple-500/30 bg-gray-50 dark:bg-gray-900/60 p-2 transition-all duration-300 shadow-md">
+                                        <img src="{{ $image->temporaryUrl() }}" class="object-cover w-full h-[154px] rounded-md shadow-inner">
+                                        <div class="absolute inset-0 bg-slate-950/70 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
+                                            <label class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold rounded-lg cursor-pointer transition-all hover:scale-105 active:scale-95 shadow-lg">
+                                                Change
+                                                <input wire:model="image" type="file" class="hidden" accept="image/*">
+                                            </label>
+                                            <button type="button" wire:click="$set('image', null)" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-lg transition-all hover:scale-105 active:scale-95 shadow-lg">
+                                                Remove
+                                            </button>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="flex items-center justify-center w-full">
+                                        <label class="flex flex-col items-center justify-center w-full h-[176px] border-2 border-dashed border-gray-350 dark:border-gray-700 hover:border-purple-500/50 rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700/50 hover:bg-purple-50/10 dark:hover:bg-purple-950/10 transition-all duration-300 group">
+                                            <div class="flex flex-col items-center justify-center text-center p-5">
+                                                <div class="w-10 h-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-250 dark:border-gray-700 flex items-center justify-center mb-3 group-hover:scale-110 group-hover:border-purple-500/30 transition-all duration-300 shadow-sm">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 group-hover:text-purple-500"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                                </div>
+                                                <p class="text-xs font-bold text-gray-600 dark:text-gray-300 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">Upload poster / photo</p>
+                                                <p class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 uppercase tracking-widest">JPG, PNG (Max. 2MB)</p>
+                                            </div>
+                                            <input wire:model="image" type="file" class="hidden" accept="image/*">
+                                        </label>
+                                    </div>
+                                @endif
+                                @error('image') <p class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</p> @enderror
+                            </div>
+
+                            <!-- Description -->
+                            <div class="space-y-2">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Description *</label>
+                                <textarea wire:model="description" rows="4" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white outline-none resize-none" placeholder="Provide details about the event…"></textarea>
+                                @error('description') <p class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</p> @enderror
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- Buttons --}}
-                    <div class="flex justify-end gap-3 pt-2">
-                        <button type="button" wire:click="$set('showModal', false)"
-                            class="px-5 py-2.5 rounded-xl text-sm font-semibold text-slate-300 border border-slate-600 hover:bg-white/5 transition-all">
+                    <!-- Footer Actions -->
+                    <div class="pt-6 flex gap-4 justify-end border-t border-gray-250 dark:border-gray-750 mt-8">
+                        <button type="button" wire:click="$set('showModal', false)" class="px-6 py-2.5 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 border border-gray-250 dark:border-gray-600 rounded-lg font-semibold text-sm transition-all duration-300">
                             Cancel
                         </button>
-                        <button type="submit"
-                            class="px-5 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:-translate-y-0.5"
-                            style="background:linear-gradient(135deg,#6366f1,#8b5cf6); box-shadow:0 4px 15px rgba(99,102,241,.35);">
-                            <span wire:loading.remove wire:target="save">{{ $editingId ? 'Update Event' : 'Create Event' }}</span>
-                            <span wire:loading wire:target="save">Saving…</span>
+                        <button type="submit" class="px-7 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:from-purple-700 hover:to-pink-700 transition duration-300 shadow-md flex items-center gap-2">
+                            <svg wire:loading wire:target="save" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                            <span>{{ $editingId ? 'Update Event' : 'Create Event' }}</span>
                         </button>
                     </div>
                 </form>

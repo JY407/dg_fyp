@@ -1,12 +1,38 @@
 <aside class="sidebar">
+    @php
+        $securityPerms = [];
+        if (auth()->check() && auth()->user()->user_type === 'security') {
+            $filePath = 'security_permissions.json';
+            if (\Illuminate\Support\Facades\Storage::exists($filePath)) {
+                $securityPerms = json_decode(\Illuminate\Support\Facades\Storage::get($filePath), true);
+            } else {
+                $securityPerms = [
+                    'dashboard'       => true,
+                    'visitors'        => true,
+                    'verifications'   => false,
+                    'duty_roster'     => true,
+                    'services'        => false,
+                    'culture'         => false,
+                    'events'          => false,
+                    'messages'        => false,
+                    'facilities'      => false,
+                    'road_notices'    => true,
+                    'announcements'   => true,
+                    'forum'           => false,
+                    'emergencies'     => true,
+                ];
+            }
+        }
+    @endphp
     <div class="sidebar-header">
         <a href="{{ route('admin.dashboard') }}" class="sidebar-brand">
-            <div class="sidebar-logo" style="background: #ef4444;">Ad</div>
+            <div class="sidebar-logo">Ad</div>
             <span>{{ __('app.app_name_admin') }}</span>
         </a>
     </div>
 
     <ul class="sidebar-menu">
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['dashboard'] ?? false))
         <li>
             <a href="{{ route('admin.dashboard') }}"
                 class="sidebar-link {{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
@@ -20,6 +46,8 @@
                 <span>{{ __('app.nav_admin_dashboard') }}</span>
             </a>
         </li>
+        @endif
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['visitors'] ?? false))
         <li>
             <a href="{{ route('admin.visitors.create') }}"
                 class="sidebar-link {{ request()->routeIs('admin.visitors.create') ? 'active' : '' }}">
@@ -33,7 +61,9 @@
                 <span>{{ __('app.nav_record_visitor') }}</span>
             </a>
         </li>
+        @endif
 
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['verifications'] ?? false))
         <li>
             <a href="{{ route('admin.verifications') }}"
                 class="sidebar-link {{ request()->routeIs('admin.verifications') ? 'active' : '' }}">
@@ -47,6 +77,9 @@
                 <span>{{ __('app.nav_verifications') }}</span>
             </a>
         </li>
+        @endif
+
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['duty_roster'] ?? false))
         <li>
             <a href="{{ route('admin.security-duties') }}"
                 class="sidebar-link {{ request()->routeIs('admin.security-duties') ? 'active' : '' }}">
@@ -57,6 +90,23 @@
                 <span>{{ __('app.nav_security_roster') }}</span>
             </a>
         </li>
+        @endif
+
+        @if(auth()->check() && auth()->user()->user_type === 'admin')
+        <li>
+            <a href="{{ route('admin.security-permissions') }}"
+                class="sidebar-link {{ request()->routeIs('admin.security-permissions') ? 'active' : '' }}">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+                <span>Guard Permissions</span>
+            </a>
+        </li>
+        @endif
+
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['services'] ?? false))
         <li>
             <a href="{{ route('admin.services-management') }}"
                 class="sidebar-link {{ request()->routeIs('admin.services-management') ? 'active' : '' }}">
@@ -68,6 +118,9 @@
                 <span>{{ __('app.nav_services') }}</span>
             </a>
         </li>
+        @endif
+
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['culture'] ?? false))
         <li>
             <a href="{{ route('admin.culture-management') }}"
                 class="sidebar-link {{ request()->routeIs('admin.culture-management') ? 'active' : '' }}">
@@ -79,6 +132,9 @@
                 <span>{{ __('app.nav_culture') }}</span>
             </a>
         </li>
+        @endif
+
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['events'] ?? false))
         <li>
             <a href="{{ route('admin.events-management') }}"
                 class="sidebar-link {{ request()->routeIs('admin.events-management') ? 'active' : '' }}">
@@ -94,6 +150,9 @@
                 <span>{{ __('app.nav_events') }}</span>
             </a>
         </li>
+        @endif
+
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['messages'] ?? false))
         <li>
             <a href="{{ route('admin.contact-messages') }}"
                 class="sidebar-link {{ request()->routeIs('admin.contact-messages') ? 'active' : '' }}">
@@ -105,6 +164,9 @@
                 <span>{{ __('app.nav_messages') }}</span>
             </a>
         </li>
+        @endif
+
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['facilities'] ?? false))
         <li>
             <a href="{{ route('admin.facilities') }}"
                 class="sidebar-link {{ request()->routeIs('admin.facilities') ? 'active' : '' }}">
@@ -115,6 +177,9 @@
                 <span>{{ __('app.nav_facilities') }}</span>
             </a>
         </li>
+        @endif
+
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['road_notices'] ?? false))
         <li>
             <a href="{{ route('admin.road-notices') }}"
                 class="sidebar-link {{ request()->routeIs('admin.road-notices') ? 'active' : '' }}">
@@ -124,6 +189,9 @@
                 <span>Road Notices</span>
             </a>
         </li>
+        @endif
+
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['announcements'] ?? false))
         <li>
             <a href="{{ route('admin.announcements-management') }}"
                 class="sidebar-link {{ request()->routeIs('admin.announcements-management') ? 'active' : '' }}">
@@ -135,6 +203,9 @@
                 <span>{{ __('app.nav_announcements') }}</span>
             </a>
         </li>
+        @endif
+
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['forum'] ?? false))
         <li>
             <a href="{{ route('admin.forum-management') }}"
                 class="sidebar-link {{ request()->routeIs('admin.forum-management') ? 'active' : '' }}">
@@ -147,6 +218,9 @@
                 <span>{{ __('app.nav_forum') }}</span>
             </a>
         </li>
+        @endif
+
+        @if(!auth()->check() || auth()->user()->user_type !== 'security' || ($securityPerms['emergencies'] ?? false))
         <li>
             <a href="{{ route('admin.emergencies-management') }}"
                 class="sidebar-link {{ request()->routeIs('admin.emergencies-management') ? 'active' : '' }}" style="color: #ef4444;">
@@ -160,6 +234,7 @@
                 <span>{{ __('app.nav_emergencies') }}</span>
             </a>
         </li>
+        @endif
     </ul>
 
     {{-- Language Switcher --}}
@@ -188,12 +263,12 @@
 
     <div class="sidebar-footer">
         <div class="user-profile">
-            <div class="user-avatar" style="background: #ef4444;">
+            <div class="user-avatar" style="background: {{ auth()->user()->user_type === 'security' ? '#6366f1' : '#ef4444' }};">
                 {{ substr(auth()->user()->name, 0, 1) }}
             </div>
             <div class="user-info">
                 <span class="user-name">{{ auth()->user()->name }}</span>
-                <span class="user-role">{{ __('app.administrator') }}</span>
+                <span class="user-role">{{ auth()->user()->user_type === 'security' ? 'Security Guard' : __('app.administrator') }}</span>
             </div>
         </div>
 

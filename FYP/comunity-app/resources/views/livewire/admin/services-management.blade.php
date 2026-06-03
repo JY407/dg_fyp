@@ -387,6 +387,11 @@ new #[Layout('layouts.admin')] class extends Component {
                         <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Contact Number <span class="text-xs font-normal text-gray-400">(Optional)</span></label>
                         <input type="text" wire:model="contact_number" class="w-full rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 p-3.5 outline-none transition-all" placeholder="e.g. 03-1234 5678">
                     </div>
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2">Description <span class="text-xs font-normal text-gray-400">(Optional)</span></label>
+                        <textarea wire:model="description" rows="3" class="w-full rounded-xl border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 p-3.5 outline-none transition-all" placeholder="Describe the service details..."></textarea>
+                        @error('description') <span class="text-red-500 text-xs mt-1.5 block">{{ $message }}</span> @enderror
+                    </div>
                 </div>
                 <div class="flex flex-col-reverse sm:flex-row justify-end gap-3 px-8 py-6 border-t border-gray-100 dark:border-gray-700">
                     <button wire:click="closeModal" class="px-6 py-3 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors outline-none">Cancel</button>

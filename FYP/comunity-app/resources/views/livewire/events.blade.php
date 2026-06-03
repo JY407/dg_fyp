@@ -433,95 +433,151 @@ new #[Layout('layouts.app')] class extends Component {
             </div>
         </div>
 
-        <!-- Create Event Modal -->
+
+        {{-- Create Event Modal --}}
         @if($showCreateModal)
-            <div class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/80 backdrop-blur-sm p-4 sm:p-0">
-                <div class="relative w-full max-w-2xl bg-gray-800 rounded-3xl shadow-2xl border border-gray-700 p-8 transform transition-all">
-                    <div class="flex justify-between items-center border-b border-gray-700 pb-5 mb-6">
-                        <div>
-                            <h3 class="text-2xl font-bold text-white">Create New Event</h3>
-                            <p class="text-sm text-gray-400 mt-1">Submit an event for admin approval.</p>
+            <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+                <div class="relative w-full max-w-4xl bg-gray-900 rounded-3xl shadow-2xl border border-white/10 flex flex-col max-h-[90vh]">
+
+                    {{-- Gradient Header --}}
+                    <div class="relative flex-shrink-0 bg-gradient-to-r from-purple-700 via-indigo-700 to-blue-800 px-8 pt-7 pb-6 rounded-t-3xl overflow-hidden">
+                        <div class="absolute -top-10 -right-10 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+                        <div class="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-purple-500/0 via-purple-400/50 to-blue-500/0"></div>
+                        <div class="relative flex justify-between items-start">
+                            <div>
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/10 border border-white/20 text-purple-200 mb-3 uppercase tracking-wider">
+                                    ✦ Resident Proposal
+                                </span>
+                                <h3 class="text-2xl font-black text-white tracking-tight">Create New Event</h3>
+                                <p class="text-sm text-purple-200/80 mt-1">Pitch a community event. It goes live upon administrator approval.</p>
+                            </div>
+                            <button wire:click="$set('showCreateModal', false)" class="text-white/60 hover:text-white bg-white/10 hover:bg-white/20 p-2.5 rounded-full transition-all duration-300 border border-white/10 hover:rotate-90 shrink-0 ml-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                            </button>
                         </div>
-                        <button wire:click="$toggle('showCreateModal')" class="text-gray-500 hover:text-gray-300 bg-gray-900 hover:bg-gray-700 p-2 rounded-full transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                        </button>
                     </div>
 
-                    <form wire:submit="createEvent" class="space-y-6">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Title -->
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-semibold text-gray-300 mb-2">Event Title</label>
-                                <input wire:model="title" type="text" class="w-full rounded-xl border-gray-600 bg-gray-900 text-white placeholder-gray-500 shadow-inner focus:border-indigo-500 focus:ring-indigo-500 p-3" placeholder="e.g. Weekend Yoga Class">
-                                @error('title') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
-                            </div>
+                    {{-- Scrollable Form Body --}}
+                    <div class="overflow-y-auto flex-1">
+                        <form wire:submit="createEvent" class="p-7">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                            <!-- Date -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-300 mb-2">Date</label>
-                                <input wire:model="event_date" type="date" class="w-full rounded-xl border-gray-600 bg-gray-900 text-white shadow-inner focus:border-indigo-500 focus:ring-indigo-500 p-3 color-scheme-dark">
-                                @error('event_date') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
-                            </div>
+                                {{-- Left Column: Core Info --}}
+                                <div class="space-y-5">
 
-                            <!-- Location -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-300 mb-2">Location</label>
-                                <input wire:model="location" type="text" class="w-full rounded-xl border-gray-600 bg-gray-900 text-white placeholder-gray-500 shadow-inner focus:border-indigo-500 focus:ring-indigo-500 p-3" placeholder="e.g. Community Center Hall A">
-                                @error('location') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
-                            </div>
-
-                            <!-- Start Time -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-300 mb-2">Start Time</label>
-                                <input wire:model="start_time" type="time" class="w-full rounded-xl border-gray-600 bg-gray-900 text-white shadow-inner focus:border-indigo-500 focus:ring-indigo-500 p-3 color-scheme-dark">
-                                @error('start_time') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
-                            </div>
-
-                            <!-- End Time -->
-                            <div>
-                                <label class="block text-sm font-semibold text-gray-300 mb-2">End Time</label>
-                                <input wire:model="end_time" type="time" class="w-full rounded-xl border-gray-600 bg-gray-900 text-white shadow-inner focus:border-indigo-500 focus:ring-indigo-500 p-3 color-scheme-dark">
-                                @error('end_time') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
-                            </div>
-
-                            <!-- Image -->
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-semibold text-gray-300 mb-2">Event Image (Optional)</label>
-                                <div class="flex items-center justify-center w-full">
-                                    <label class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-600 border-dashed rounded-xl cursor-pointer bg-gray-900 hover:bg-gray-800 hover:border-indigo-500 transition-colors">
-                                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
-                                            <svg aria-hidden="true" class="w-8 h-8 text-gray-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                                            <p class="text-sm text-gray-500 font-medium">Click to upload image</p>
-                                        </div>
-                                        <input wire:model="image" type="file" class="hidden" accept="image/*">
-                                    </label>
-                                </div>
-                                @if ($image)
-                                    <div class="mt-4 relative rounded-xl overflow-hidden h-32 w-1/2 border border-gray-700">
-                                        <img src="{{ $image->temporaryUrl() }}" class="object-cover w-full h-full">
+                                    {{-- Event Title --}}
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-300 mb-2">Event Title <span class="text-red-400">*</span></label>
+                                        <input wire:model="title" type="text" required
+                                            class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                            placeholder="e.g. Weekend Yoga Class">
+                                        @error('title') <span class="text-red-400 text-xs mt-1.5 block">{{ $message }}</span> @enderror
                                     </div>
-                                @endif
-                                @error('image') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
+
+                                    {{-- Date & Location --}}
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-300 mb-2">Date <span class="text-red-400">*</span></label>
+                                            <input wire:model="event_date" type="date" required
+                                                class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" style="color-scheme:dark">
+                                            @error('event_date') <span class="text-red-400 text-xs mt-1.5 block">{{ $message }}</span> @enderror
+                                        </div>
+                                        <div>
+                                            <label class="block text-sm font-semibold text-gray-300 mb-2">Location <span class="text-red-400">*</span></label>
+                                            <input wire:model="location" type="text" required
+                                                class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+                                                placeholder="e.g. Hall A">
+                                            @error('location') <span class="text-red-400 text-xs mt-1.5 block">{{ $message }}</span> @enderror
+                                        </div>
+                                    </div>
+
+                                    {{-- Timing Details --}}
+                                    <div class="bg-gray-800/80 border border-purple-500/30 rounded-2xl p-4 space-y-3">
+                                        <div class="flex items-center gap-2 text-purple-400 font-bold text-xs uppercase tracking-wider">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            Timing Details
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div>
+                                                <label class="block text-xs font-semibold text-gray-400 mb-2">Start Time <span class="text-red-400">*</span></label>
+                                                <input wire:model="start_time" type="time" required
+                                                    class="w-full px-3 py-2.5 bg-gray-900 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm" style="color-scheme:dark">
+                                                @error('start_time') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-semibold text-gray-400 mb-2">End Time <span class="text-red-400">*</span></label>
+                                                <input wire:model="end_time" type="time" required
+                                                    class="w-full px-3 py-2.5 bg-gray-900 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm" style="color-scheme:dark">
+                                                @error('end_time') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {{-- Description --}}
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-300 mb-2">Description <span class="text-red-400">*</span></label>
+                                        <textarea wire:model="description" rows="4" required
+                                            class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none"
+                                            placeholder="Explain what the event is about, activities, schedule..."></textarea>
+                                        @error('description') <span class="text-red-400 text-xs mt-1.5 block">{{ $message }}</span> @enderror
+                                    </div>
+                                </div>
+
+                                {{-- Right Column: Image Upload --}}
+                                <div class="flex flex-col">
+                                    <label class="block text-sm font-semibold text-gray-300 mb-2">Event Poster / Image <span class="text-gray-500 font-normal text-xs">(Optional)</span></label>
+                                    @if ($image)
+                                        <div class="relative group rounded-2xl overflow-hidden border border-purple-500/40 bg-gray-800 shadow-lg shadow-purple-900/20 flex-1 min-h-[200px]">
+                                            <img src="{{ $image->temporaryUrl() }}" class="object-cover w-full h-full min-h-[200px]">
+                                            <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
+                                                <label class="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs font-bold rounded-xl cursor-pointer hover:scale-105 transition-transform shadow-lg">
+                                                    Change
+                                                    <input wire:model="image" type="file" class="hidden" accept="image/*">
+                                                </label>
+                                                <button type="button" wire:click="$set('image', null)" class="px-4 py-2 bg-red-600 hover:bg-red-500 text-white text-xs font-bold rounded-xl hover:scale-105 transition-transform shadow-lg">
+                                                    Remove
+                                                </button>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <label class="flex flex-col items-center justify-center flex-1 min-h-[280px] border-2 border-dashed border-gray-600 hover:border-purple-500 rounded-2xl cursor-pointer bg-gray-800/50 hover:bg-purple-950/20 transition-all duration-300 group">
+                                            <div class="flex flex-col items-center justify-center text-center p-6">
+                                                <div class="w-16 h-16 rounded-2xl bg-gray-700 border border-gray-600 flex items-center justify-center mb-4 group-hover:scale-110 group-hover:border-purple-500/50 group-hover:bg-purple-900/20 transition-all duration-300">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400 group-hover:text-purple-400 transition-colors"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                                                </div>
+                                                <p class="text-sm font-bold text-gray-400 group-hover:text-purple-300 transition-colors">Click to upload event poster</p>
+                                                <p class="text-xs text-gray-600 mt-2">JPG, PNG — Max. 10MB</p>
+                                            </div>
+                                            <input wire:model="image" type="file" class="hidden" accept="image/*">
+                                        </label>
+                                    @endif
+                                    @error('image') <span class="text-red-400 text-xs mt-1.5 block">{{ $message }}</span> @enderror
+                                    <div wire:loading wire:target="image" class="mt-2 flex items-center gap-2 text-purple-400 text-xs">
+                                        <svg class="animate-spin h-3.5 w-3.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        Uploading...
+                                    </div>
+                                </div>
                             </div>
 
-                            <!-- Description -->
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-semibold text-gray-300 mb-2">Description</label>
-                                <textarea wire:model="description" rows="4" class="w-full rounded-xl border-gray-600 bg-gray-900 text-white placeholder-gray-500 shadow-inner focus:border-indigo-500 focus:ring-indigo-500 p-3" placeholder="Provide details about the event..."></textarea>
-                                @error('description') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
+                            {{-- Footer --}}
+                            <div class="flex items-center justify-between gap-4 mt-7 pt-6 border-t border-gray-700/60">
+                                <p class="text-xs text-gray-500">Your event will be reviewed by an admin before going live.</p>
+                                <div class="flex items-center gap-3 shrink-0">
+                                    <button type="button" wire:click="$set('showCreateModal', false)"
+                                        class="px-5 py-2.5 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 font-semibold rounded-xl transition-all text-sm">
+                                        Cancel
+                                    </button>
+                                    <button type="submit"
+                                        class="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg shadow-purple-900/40 transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-2 text-sm">
+                                        <svg wire:loading wire:target="createEvent" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                        <svg wire:loading.remove wire:target="createEvent" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                        <span wire:loading.remove wire:target="createEvent">Submit for Review</span>
+                                        <span wire:loading wire:target="createEvent">Submitting...</span>
+                                    </button>
+                                </div>
                             </div>
-                        </div>
-
-                        <div class="pt-4 flex gap-3 justify-end border-t border-gray-700 mt-8">
-                            <button type="button" wire:click="$toggle('showCreateModal')" class="px-6 py-2.5 bg-gray-800 border border-gray-600 rounded-xl text-gray-300 font-bold hover:bg-gray-700 transition-colors">
-                                Cancel
-                            </button>
-                            <button type="submit" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-[0_0_10px_rgba(79,70,229,0.3)] transition-all flex items-center gap-2">
-                                <svg wire:loading wire:target="createEvent" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                Submit for Approval
-                            </button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </div>
         @endif

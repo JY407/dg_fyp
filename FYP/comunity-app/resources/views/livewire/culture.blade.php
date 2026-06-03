@@ -82,6 +82,83 @@ new #[Layout('layouts.app')] class extends Component {
                 radial-gradient(ellipse at 50% 50%, rgba(239,68,68,.08) 0%, transparent 50%),
                 radial-gradient(ellipse at 90% 50%, rgba(139,92,246,.12) 0%, transparent 50%);
         }
+
+        /* Interactive Calendar styling */
+        .cal-day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+            position: relative;
+            color: #94a3b8; /* text-slate-400 */
+        }
+        .cal-day-cell:hover:not(.cal-day-empty) {
+            background-color: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            transform: scale(1.08);
+        }
+        .cal-day-cell.cal-day-active {
+            background-color: #6366f1 !important; /* indigo-500 */
+            color: #ffffff !important;
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.5);
+            font-weight: 800;
+        }
+        .cal-day-cell.cal-day-today:not(.cal-day-active) {
+            border: 2px solid #6366f1;
+            color: #ffffff;
+            font-weight: 800;
+        }
+        .cal-day-empty {
+            cursor: default;
+            opacity: 0.15;
+        }
+        
+        /* Holiday/celebration specific day classes */
+        .cal-day-malay {
+            background-color: rgba(16, 185, 129, 0.18);
+            border: 1px solid rgba(16, 185, 129, 0.5);
+            color: #34d399;
+        }
+        .cal-day-chinese {
+            background-color: rgba(239, 68, 68, 0.18);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #f87171;
+        }
+        .cal-day-indian {
+            background-color: rgba(139, 92, 246, 0.18);
+            border: 1px solid rgba(139, 92, 246, 0.5);
+            color: #a78bfa;
+        }
+        .cal-day-indigenous {
+            background-color: rgba(245, 158, 11, 0.18);
+            border: 1px solid rgba(245, 158, 11, 0.5);
+            color: #fbbf24;
+        }
+        .cal-day-national {
+            background-color: rgba(59, 130, 246, 0.18);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+            color: #60a5fa;
+        }
+        
+        /* Indicator dots below text in calendar cells */
+        .cal-indicator-dot {
+            width: 4px;
+            height: 4px;
+            border-radius: 9999px;
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .bg-indicator-malay { background-color: #10b981; }
+        .bg-indicator-chinese { background-color: #ef4444; }
+        .bg-indicator-indian { background-color: #8b5cf6; }
+        .bg-indicator-indigenous { background-color: #f59e0b; }
+        .bg-indicator-national { background-color: #3b82f6; }
     </style>
     @endpush
 
@@ -178,28 +255,69 @@ new #[Layout('layouts.app')] class extends Component {
                 </div>
             </div>
 
-            {{-- Chinese / Lunar Calendar --}}
-            <div class="bg-slate-800 rounded-2xl shadow-sm border border-gray-700 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-700 flex items-center gap-3"
-                    style="background: linear-gradient(135deg, #422006, #78350f);">
-                    <div class="w-9 h-9 rounded-xl bg-yellow-900 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
-                        </svg>
+            {{-- Malaysia Festive & Celebrations Calendar --}}
+            <div class="rounded-2xl border border-gray-700 overflow-hidden flex flex-col h-full animate-fadeIn" style="background:#1e293b;" wire:ignore>
+                <div class="px-6 py-4 border-b border-gray-700 flex items-center justify-between"
+                    style="background: linear-gradient(135deg, #1e1b4b, #312e81);">
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 rounded-xl bg-indigo-900/60 flex items-center justify-center border border-indigo-500/20">
+                            <span class="text-lg">📅</span>
+                        </div>
+                        <div>
+                            <h2 class="text-base font-bold text-white">Festive Calendar</h2>
+                            <p class="text-xs text-gray-400">Malaysia Cultural &amp; Public Holidays</p>
+                        </div>
                     </div>
-                    <div>
-                        <h2 class="text-base font-bold text-white">Chinese / Lunar Calendar</h2>
-                        <p class="text-xs text-gray-400">Current lunar date &amp; vegetarian days</p>
+                    {{-- Navigation --}}
+                    <div class="flex items-center gap-1.5">
+                        <button id="cal-prev-btn" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 hover:text-white hover:bg-slate-700/50 transition-colors border border-gray-700/50" title="Previous Month">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <span id="cal-month-year" class="text-sm font-bold text-white px-1 min-w-24 text-center">May 2026</span>
+                        <button id="cal-next-btn" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-300 hover:text-white hover:bg-slate-700/50 transition-colors border border-gray-700/50" title="Next Month">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
-                <div class="p-5 flex items-center justify-center min-h-36" id="lunar-date-container" wire:ignore>
-                    <div class="animate-pulse flex flex-col items-center gap-3 w-full">
-                        <div class="w-16 h-16 bg-gray-700 rounded-full"></div>
-                        <div class="h-4 bg-gray-700 rounded w-1/2"></div>
-                        <div class="h-4 bg-gray-700 rounded w-3/4"></div>
+                <div class="p-5 flex flex-col gap-4 flex-grow justify-between">
+                    {{-- Calendar Grid Container --}}
+                    <div class="flex flex-col">
+                        {{-- Weekday Names --}}
+                        <div class="grid grid-cols-7 text-center text-slate-400 font-bold text-xs tracking-wider mb-2 opacity-80">
+                            <div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div><div>Sun</div>
+                        </div>
+                        {{-- Days Grid --}}
+                        <div id="cal-days-grid" class="grid grid-cols-7 gap-y-1.5 gap-x-1.5 text-center text-sm font-semibold">
+                            {{-- Dynamically rendered via JS --}}
+                        </div>
+                    </div>
+
+                    {{-- Culture Legend --}}
+                    <div class="pt-3 border-t border-gray-700/60 flex flex-wrap gap-1.5 text-[10px] font-semibold text-slate-300">
+                        <span class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/40 text-emerald-300 border border-emerald-800/40">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Malay/Islamic
+                        </span>
+                        <span class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-950/40 text-red-300 border border-red-800/40">
+                            <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Chinese
+                        </span>
+                        <span class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-violet-950/40 text-violet-300 border border-violet-800/40">
+                            <span class="w-1.5 h-1.5 rounded-full bg-violet-500"></span> Indian
+                        </span>
+                        <span class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-950/40 text-amber-300 border border-amber-800/40">
+                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Indigenous
+                        </span>
+                        <span class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-950/40 text-blue-300 border border-blue-800/40">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> National
+                        </span>
+                    </div>
+
+                    {{-- Active Day Details Panel --}}
+                    <div id="cal-day-detail" class="mt-1 p-3.5 rounded-xl border transition-all duration-300 flex flex-col gap-1.5 bg-slate-900/60 border-slate-700/60 min-h-[96px] justify-center">
+                        {{-- Dynamically updated details --}}
                     </div>
                 </div>
             </div>
@@ -298,15 +416,26 @@ new #[Layout('layouts.app')] class extends Component {
                             </div>
 
                             {{-- Content --}}
-                            <div class="p-5">
-                                {{-- Culture pill --}}
-                                <div class="mb-2">
-                                    <span class="culture-pill {{ $pillClass }}">{{ $pillLabel }}</span>
+                            <div class="p-5 flex flex-col justify-between min-h-[170px]">
+                                <div>
+                                    {{-- Culture pill --}}
+                                    <div class="mb-2">
+                                        <span class="culture-pill {{ $pillClass }}">{{ $pillLabel }}</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors line-clamp-1">{{ $event->title }}</h3>
+                                    <p class="text-sm text-gray-400 leading-relaxed line-clamp-2">{{ $event->description }}</p>
                                 </div>
-                                <h3 class="text-lg font-bold text-white mb-2 group-hover:text-indigo-400 transition-colors line-clamp-1">{{ $event->title }}</h3>
-                                <p class="text-sm text-gray-400 leading-relaxed line-clamp-3">{{ $event->description }}</p>
-                                <div class="mt-3 text-xs text-indigo-400 font-semibold">
-                                    {{ $isToday ? 'Happening today!' : 'In ' . \Carbon\Carbon::parse($event->event_date)->diffForHumans() }}
+                                <div class="mt-4 flex items-center justify-between border-t border-slate-700/40 pt-3">
+                                    <span class="text-xs text-indigo-400 font-semibold">
+                                        {{ $isToday ? 'Happening today!' : 'In ' . \Carbon\Carbon::parse($event->event_date)->diffForHumans() }}
+                                    </span>
+                                    <button 
+                                        type="button"
+                                        class="text-xs text-indigo-300 hover:text-white font-bold transition-colors flex items-center gap-1 group/btn cursor-pointer"
+                                        onclick="openEventDetailModal(decodeURIComponent('{{ rawurlencode($event->title) }}'), decodeURIComponent('{{ rawurlencode($event->description) }}'), '{{ $event->image_path ? asset('storage/' . $event->image_path) : '' }}', '{{ \Carbon\Carbon::parse($event->event_date)->format('d M Y') }}', '{{ $pillLabel }}', '{{ $pillClass }}', '{{ $bgClass }}', '{{ $icon }}')"
+                                    >
+                                        Read More <span class="group-hover/btn:translate-x-0.5 transition-transform inline-block">→</span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -371,13 +500,24 @@ new #[Layout('layouts.app')] class extends Component {
                                 </div>
                             </div>
                             {{-- Content --}}
-                            <div class="p-4">
-                                <div class="mb-1">
-                                    <span class="culture-pill {{ $pillClass2 }}" style="opacity:.65;">{{ $pillLabel2 }}</span>
+                            <div class="p-4 flex flex-col justify-between min-h-[140px]">
+                                <div>
+                                    <div class="mb-1">
+                                        <span class="culture-pill {{ $pillClass2 }}" style="opacity:.65;">{{ $pillLabel2 }}</span>
+                                    </div>
+                                    <h3 class="text-base font-bold text-slate-400 mb-1 group-hover:text-slate-300 transition-colors line-clamp-1">{{ $event->title }}</h3>
+                                    <p class="text-xs text-slate-600 leading-relaxed line-clamp-2">{{ $event->description }}</p>
                                 </div>
-                                <h3 class="text-base font-bold text-slate-400 mb-1 group-hover:text-slate-300 transition-colors line-clamp-1">{{ $event->title }}</h3>
-                                <p class="text-xs text-slate-600 leading-relaxed line-clamp-2">{{ $event->description }}</p>
-                                <div class="mt-2 text-xs text-slate-600">{{ \Carbon\Carbon::parse($event->event_date)->diffForHumans() }}</div>
+                                <div class="mt-3 flex items-center justify-between border-t border-slate-800/60 pt-2">
+                                    <span class="text-xs text-slate-600">{{ \Carbon\Carbon::parse($event->event_date)->diffForHumans() }}</span>
+                                    <button 
+                                        type="button"
+                                        class="text-xs text-slate-400 hover:text-white font-bold transition-colors flex items-center gap-1 group/btn cursor-pointer"
+                                        onclick="openEventDetailModal(decodeURIComponent('{{ rawurlencode($event->title) }}'), decodeURIComponent('{{ rawurlencode($event->description) }}'), '{{ $event->image_path ? asset('storage/' . $event->image_path) : '' }}', '{{ \Carbon\Carbon::parse($event->event_date)->format('d M Y') }}', '{{ $pillLabel2 }}', '{{ $pillClass2 }}', '{{ $bgClass2 }}', '{{ $icon2 }}')"
+                                    >
+                                        Read More <span class="group-hover/btn:translate-x-0.5 transition-transform inline-block">→</span>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     @endforeach
@@ -387,11 +527,55 @@ new #[Layout('layouts.app')] class extends Component {
         @endif
     </div>
 
-    {{-- Scripts --}}
-    @assets
-    <script src="https://cdn.jsdelivr.net/npm/lunar-javascript@1.6.13/lunar.js"></script>
-    @endassets
+    {{-- Dynamic Culture Event Detail Modal --}}
+    <div id="culture-detail-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 animate-fadeIn" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        {{-- Backdrop with blur --}}
+        <div class="absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300" onclick="closeEventDetailModal()"></div>
+        
+        {{-- Modal Content Box --}}
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl max-w-lg w-full z-10 transform scale-95 opacity-0 transition-all duration-300 flex flex-col max-h-[90vh]">
+            {{-- Image / Header Placeholder --}}
+            <div id="modal-img-container" class="h-56 relative shrink-0">
+                <img id="modal-event-img" src="" alt="" class="w-full h-full object-cover hidden">
+                <div id="modal-event-placeholder" class="w-full h-full flex items-center justify-center relative">
+                    <div class="ethnic-pattern-overlay"></div>
+                    <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div class="w-36 h-36 rounded-full border border-white/10 absolute"></div>
+                        <div class="w-24 h-24 rounded-full border border-white/10 absolute"></div>
+                    </div>
+                    <span id="modal-event-placeholder-icon" class="text-6xl drop-shadow-lg z-10"></span>
+                </div>
+                {{-- Close button --}}
+                <button type="button" onclick="closeEventDetailModal()" class="absolute top-4 right-4 w-9 h-9 rounded-full bg-slate-950/60 backdrop-blur-sm text-slate-300 hover:text-white flex items-center justify-center border border-slate-700/30 hover:scale-105 transition-all cursor-pointer">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            
+            {{-- Body --}}
+            <div class="p-6 overflow-y-auto flex-grow flex flex-col gap-3">
+                <div class="flex items-center justify-between gap-3 shrink-0">
+                    <span id="modal-event-pill" class="culture-pill text-xs"></span>
+                    <span id="modal-event-date" class="text-xs font-bold text-indigo-400 bg-indigo-950/40 border border-indigo-900/40 px-3 py-1 rounded-full"></span>
+                </div>
+                <h3 id="modal-event-title" class="text-xl font-extrabold text-white leading-tight mt-1 shrink-0 select-text"></h3>
+                <div class="w-full h-px bg-slate-800/80 my-1 shrink-0"></div>
+                <div class="text-sm text-slate-300 leading-relaxed overflow-y-auto pr-1 select-text" style="white-space: pre-line;">
+                    <p id="modal-event-desc"></p>
+                </div>
+            </div>
+            
+            {{-- Footer --}}
+            <div class="px-6 py-4 border-t border-slate-800 bg-slate-950/40 flex justify-end shrink-0">
+                <button type="button" onclick="closeEventDetailModal()" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-sm font-bold text-white transition-all cursor-pointer">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
 
+    {{-- Scripts --}}
     @script
     <script>
         // Prayer Times
@@ -425,35 +609,426 @@ new #[Layout('layouts.app')] class extends Component {
                 document.getElementById('prayer-times-container').innerHTML = '<p class="text-sm text-red-400 text-center py-4">Failed to load prayer times.</p>';
             });
 
-        // Lunar Date
-        setTimeout(() => {
-            try {
-                if (window.Solar) {
-                    const solar = Solar.fromDate(new Date());
-                    const lunar = solar.getLunar();
-                    const day = lunar.getDay();
-                    const dayChinese = lunar.getDayInChinese();
-                    const monthChinese = lunar.getMonthInChinese();
-                    const isSpecial = day === 1 || day === 15;
-
-                    let html = `
-                        <div class="text-center w-full">
-                            <div class="text-5xl font-extrabold text-gray-900 mb-1">${day}</div>
-                            <div class="text-sm font-semibold text-yellow-600 mb-3">Lunar Day</div>
-                            <div class="inline-block bg-yellow-50 text-yellow-700 font-medium text-sm px-4 py-1.5 rounded-full border border-yellow-200">
-                                ${monthChinese} Month · ${dayChinese}
-                            </div>
-                            ${isSpecial ? `
-                            <div class="mt-4 px-4 py-2.5 bg-yellow-50 text-yellow-700 rounded-xl border border-yellow-200 text-sm font-semibold flex items-center justify-center gap-2">
-                                🌿 Vegetarian Day (Hari Vegetarian)
-                            </div>` : `<div class="mt-4 text-xs text-gray-400">${day < 15 ? 'Next vegetarian day: 15th (' + (15-day) + ' days)' : 'Next: 1st (New Moon)'}</div>`}
-                        </div>`;
-                    document.getElementById('lunar-date-container').innerHTML = html;
+        // Malaysia Celebrations & Festive Calendar Logic
+        const FESTIVALS_DB = {
+            '2026-01-01': [{
+                title: "New Year's Day",
+                category: 'national',
+                typeLabel: 'National Holiday',
+                icon: '🎆',
+                description: 'Celebrating the start of the Gregorian new year across Malaysia.'
+            }],
+            '2026-02-01': [{
+                title: "Thaipusam",
+                category: 'indian',
+                typeLabel: 'Hindu Festival',
+                icon: '🪔',
+                description: 'A major Hindu festival celebrated by the Tamil community, dedicated to Lord Murugan. Features vibrant Kavadi processions at Batu Caves.'
+            }],
+            '2026-02-17': [{
+                title: "Chinese New Year (Day 1)",
+                category: 'chinese',
+                typeLabel: 'Lunar New Year',
+                icon: '🏮',
+                description: 'The first day of the Lunar New Year, marked by family reunions, lion dances, and red envelopes (ang pows). Year of the Horse.'
+            }],
+            '2026-02-18': [{
+                title: "Chinese New Year (Day 2)",
+                category: 'chinese',
+                typeLabel: 'Lunar New Year',
+                icon: '🏮',
+                description: 'The second day of Chinese New Year, characterized by visiting relatives and friends to offer blessings and gifts.'
+            }],
+            '2026-03-07': [{
+                title: "Nuzul Al-Quran",
+                category: 'malay',
+                typeLabel: 'Islamic Festival',
+                icon: '📖',
+                description: 'Commemorates the day when the first revelation of the Quran was sent down to the Prophet Muhammad.'
+            }],
+            '2026-03-21': [{
+                title: "Hari Raya Aidilfitri (Day 1)",
+                category: 'malay',
+                typeLabel: 'Eid al-Fitr',
+                icon: '🌙',
+                description: 'Also known as Hari Raya Puasa, celebrating the completion of Ramadan, the holy month of fasting. Marked by prayers, open houses, and delicious traditional food.'
+            }],
+            '2026-03-22': [{
+                title: "Hari Raya Aidilfitri (Day 2)",
+                category: 'malay',
+                typeLabel: 'Eid al-Fitr',
+                icon: '🕌',
+                description: 'The second day of Eid, with continued open houses, traditional foods (rendang, ketupat), and spending time with extended family.'
+            }],
+            '2026-04-03': [{
+                title: "Good Friday",
+                category: 'national',
+                typeLabel: 'Christian Holy Day',
+                icon: '✝️',
+                description: 'Observance of the crucifixion of Jesus Christ, marked with church services by the Christian community.'
+            }],
+            '2026-05-01': [{
+                title: "Labour Day",
+                category: 'national',
+                typeLabel: 'National Holiday',
+                icon: '🛠️',
+                description: 'Hari Pekerja, honoring the contributions of workers nationwide.'
+            }],
+            '2026-05-27': [{
+                title: "Hari Raya Haji",
+                category: 'malay',
+                typeLabel: 'Eid al-Adha',
+                icon: '🐏',
+                description: 'The Feast of Sacrifice, commemorating Prophet Ibrahim\'s willingness to sacrifice his son. Marked by prayers and distribution of meat to the needy.'
+            }],
+            '2026-05-30': [{
+                title: "Tadau Kaamatan (Day 1)",
+                category: 'indigenous',
+                typeLabel: 'Harvest Festival (Sabah)',
+                icon: '🌾',
+                description: 'Sabahan harvest festival celebrated by the Kadazan-Dusun community to thank the rice spirits. Features traditional dance and delicacies.'
+            }],
+            '2026-05-31': [
+                {
+                    title: "Wesak Day",
+                    category: 'chinese',
+                    typeLabel: 'Buddhist Festival',
+                    icon: '☸️',
+                    description: 'Commemorates the birth, enlightenment, and passing of Gautama Buddha. Marked by temple prayers and candlelit processions.'
+                },
+                {
+                    title: "Tadau Kaamatan (Day 2)",
+                    category: 'indigenous',
+                    typeLabel: 'Harvest Festival (Sabah)',
+                    icon: '🌾',
+                    description: 'The second day of Kaamatan celebrations, continuing the thanksgiving festivities, traditional games, and community gathering.'
                 }
-            } catch (e) {
-                document.getElementById('lunar-date-container').innerHTML = '<p class="text-sm text-red-400 text-center">Error loading Lunar Date</p>';
+            ],
+            '2026-06-01': [
+                {
+                    title: "Agong's Birthday",
+                    category: 'national',
+                    typeLabel: 'National Holiday',
+                    icon: '👑',
+                    description: 'Celebrating the official birthday of His Majesty the Yang di-Pertuan Agong, the King of Malaysia.'
+                },
+                {
+                    title: "Hari Gawai (Day 1)",
+                    category: 'indigenous',
+                    typeLabel: 'Harvest Festival (Sarawak)',
+                    icon: '🌾',
+                    description: 'Sarawakian harvest festival celebrated by the Dayak people (Iban, Bidayuh) to mark the end of the harvesting season and offer thanks.'
+                }
+            ],
+            '2026-06-02': [{
+                title: "Hari Gawai (Day 2)",
+                category: 'indigenous',
+                typeLabel: 'Harvest Festival (Sarawak)',
+                icon: '🍂',
+                description: 'Continued Dayak celebrations in longhouses with traditional tuak (rice wine), ngajat dancing, and welcoming visitors.'
+            }],
+            '2026-06-17': [{
+                title: "Awal Muharram",
+                category: 'malay',
+                typeLabel: 'Islamic New Year',
+                icon: '🕌',
+                description: 'Marks the beginning of the Islamic New Year (Hijri Calendar). A time for reflection, prayer, and recounting the migration of Prophet Muhammad.'
+            }],
+            '2026-08-25': [{
+                title: "Maulidur Rasul",
+                category: 'malay',
+                typeLabel: 'Islamic Observance',
+                icon: '🕌',
+                description: 'Celebrating the birthday of the Prophet Muhammad. Marked by peace marches and Islamic lectures.'
+            }],
+            '2026-08-31': [{
+                title: "National Day (Hari Merdeka)",
+                category: 'national',
+                typeLabel: 'National Holiday',
+                icon: '🇲🇾',
+                description: 'Commemorates Malaya\'s independence from British rule in 1957. Celebrated with national parades, patriotism, and fireworks.'
+            }],
+            '2026-09-16': [{
+                title: "Malaysia Day (Hari Malaysia)",
+                category: 'national',
+                typeLabel: 'National Holiday',
+                icon: '🇲🇾',
+                description: 'Commemorates the establishment of the Malaysian federation in 1963, uniting Malaya, Sabah, and Sarawak.'
+            }],
+            '2026-11-08': [{
+                title: "Deepavali",
+                category: 'indian',
+                typeLabel: 'Hindu Festival of Lights',
+                icon: '🪔',
+                description: 'The Hindu festival of lights, celebrating the victory of light over darkness. Marked by drawing kolam at doorways, family feasts, and sparklers.'
+            }],
+            '2026-12-25': [{
+                title: "Christmas Day",
+                category: 'national',
+                typeLabel: 'Christian Festival',
+                icon: '🎄',
+                description: 'Celebrating the birth of Jesus Christ. Marked by church services, Christmas carols, open houses, and exchange of gifts.'
+            }]
+        };
+
+        let currentYear = 2026;
+        let currentMonth = 4; // May (0-indexed)
+
+        const monthNames = [
+            "January", "February", "March", "April", "May", "June", 
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        function renderCalendar(year, month) {
+            // Find weekday of 1st day of month
+            const firstDayIndex = new Date(year, month, 1).getDay(); // 0 is Sunday, 1 is Monday...
+            // Adjust so Monday is 0, Sunday is 6
+            const startDay = firstDayIndex === 0 ? 6 : firstDayIndex - 1;
+            
+            const totalDays = new Date(year, month + 1, 0).getDate();
+            
+            // Update Header text
+            const monthYearEl = document.getElementById('cal-month-year');
+            if (monthYearEl) {
+                monthYearEl.textContent = `${monthNames[month]} ${year}`;
             }
-        }, 500);
+            
+            const grid = document.getElementById('cal-days-grid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            
+            // Add padding days for previous month
+            for (let i = 0; i < startDay; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cal-day-cell cal-day-empty';
+                cell.innerHTML = '&nbsp;';
+                grid.appendChild(cell);
+            }
+            
+            // Render active month days
+            for (let day = 1; day <= totalDays; day++) {
+                const cell = document.createElement('div');
+                cell.className = 'cal-day-cell';
+                cell.textContent = day;
+                
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                
+                // Highlight today's date
+                const today = new Date();
+                const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+                if (isToday) {
+                    cell.classList.add('cal-day-today');
+                }
+                
+                // Highlight festivals on this date
+                const festivals = FESTIVALS_DB[dateStr];
+                if (festivals && festivals.length > 0) {
+                    const mainCategory = festivals[0].category;
+                    cell.classList.add(`cal-day-${mainCategory}`);
+                    
+                    // Add tiny color dot indicator
+                    const dot = document.createElement('span');
+                    dot.className = `cal-indicator-dot bg-indicator-${mainCategory}`;
+                    cell.appendChild(dot);
+                }
+                
+                // Selection click event
+                cell.addEventListener('click', () => {
+                    const activeCells = grid.querySelectorAll('.cal-day-active');
+                    activeCells.forEach(c => c.classList.remove('cal-day-active'));
+                    
+                    cell.classList.add('cal-day-active');
+                    showDayDetails(dateStr, day, festivals);
+                });
+                
+                grid.appendChild(cell);
+            }
+            
+            // Pre-select day: select today's date if current month/year, else select the 1st of the month
+            const today = new Date();
+            const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+            const dayToSelect = isCurrentMonth ? today.getDate() : 1;
+            
+            const cells = grid.querySelectorAll('.cal-day-cell:not(.cal-day-empty)');
+            cells.forEach(c => {
+                if (parseInt(c.textContent) === dayToSelect) {
+                    c.classList.add('cal-day-active');
+                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dayToSelect).padStart(2, '0')}`;
+                    showDayDetails(dateStr, dayToSelect, FESTIVALS_DB[dateStr]);
+                }
+            });
+        }
+
+        function showDayDetails(dateStr, day, festivals) {
+            const detailPanel = document.getElementById('cal-day-detail');
+            if (!detailPanel) return;
+            
+            const dateParts = dateStr.split('-');
+            const dateObj = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+            const formattedDate = dateObj.toLocaleDateString('en-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            
+            if (!festivals || festivals.length === 0) {
+                detailPanel.className = "mt-1 p-3.5 rounded-xl border transition-all duration-300 flex flex-col gap-1 bg-slate-900/60 border-slate-700/60 min-h-[96px] justify-center";
+                detailPanel.innerHTML = `
+                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">${formattedDate}</div>
+                    <div class="text-sm font-bold text-slate-200 mt-1">Harmonious Day</div>
+                    <div class="text-xs text-slate-400 leading-relaxed mt-0.5">No major public holiday or festival listed. A wonderful day to celebrate unity and community!</div>
+                `;
+                return;
+            }
+            
+            let html = `<div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">${formattedDate}</div>`;
+            
+            festivals.forEach((f) => {
+                let badgeClass = '';
+                let borderClass = '';
+                let bgGradient = '';
+                
+                if (f.category === 'malay') {
+                    badgeClass = 'culture-pill-malay';
+                    borderClass = 'border-emerald-500/20';
+                    bgGradient = 'rgba(16, 185, 129, 0.08)';
+                } else if (f.category === 'chinese') {
+                    badgeClass = 'culture-pill-chinese';
+                    borderClass = 'border-red-500/20';
+                    bgGradient = 'rgba(239, 68, 68, 0.08)';
+                } else if (f.category === 'indian') {
+                    badgeClass = 'culture-pill-indian';
+                    borderClass = 'border-violet-500/20';
+                    bgGradient = 'rgba(139, 92, 246, 0.08)';
+                } else if (f.category === 'indigenous') {
+                    badgeClass = 'culture-pill-general';
+                    borderClass = 'border-amber-500/20';
+                    bgGradient = 'rgba(245, 158, 11, 0.08)';
+                } else {
+                    badgeClass = 'culture-pill-general';
+                    borderClass = 'border-blue-500/20';
+                    bgGradient = 'rgba(59, 130, 246, 0.08)';
+                }
+                
+                html += `
+                    <div class="flex flex-col gap-1 p-2.5 rounded-lg border ${borderClass} mb-2 last:mb-0" style="background: ${bgGradient};">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-xs font-extrabold text-white flex items-center gap-1.5">
+                                <span>${f.icon}</span> ${f.title}
+                            </span>
+                            <span class="culture-pill ${badgeClass} text-[9px] scale-90 origin-right py-0 px-2">${f.typeLabel}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-300 leading-relaxed mt-1">${f.description}</p>
+                    </div>
+                `;
+            });
+            
+            // Style the panel border to match first holiday category
+            const mainCategory = festivals[0].category;
+            detailPanel.className = `mt-1 p-3.5 rounded-xl border transition-all duration-300 flex flex-col gap-1 bg-slate-900/80 min-h-[96px] justify-center`;
+            
+            if (mainCategory === 'malay') detailPanel.classList.add('border-emerald-500/40');
+            else if (mainCategory === 'chinese') detailPanel.classList.add('border-red-500/40');
+            else if (mainCategory === 'indian') detailPanel.classList.add('border-violet-500/40');
+            else if (mainCategory === 'indigenous') detailPanel.classList.add('border-amber-500/40');
+            else detailPanel.classList.add('border-blue-500/40');
+            
+            detailPanel.innerHTML = html;
+        }
+
+        // Initialize and bind buttons
+        setTimeout(() => {
+            const prevBtn = document.getElementById('cal-prev-btn');
+            const nextBtn = document.getElementById('cal-next-btn');
+            
+            if (prevBtn && nextBtn) {
+                prevBtn.addEventListener('click', () => {
+                    currentMonth--;
+                    if (currentMonth < 0) {
+                        currentMonth = 11;
+                        currentYear--;
+                    }
+                    renderCalendar(currentYear, currentMonth);
+                });
+                
+                nextBtn.addEventListener('click', () => {
+                    currentMonth++;
+                    if (currentMonth > 11) {
+                        currentMonth = 0;
+                        currentYear++;
+                    }
+                    renderCalendar(currentYear, currentMonth);
+                });
+            }
+            
+            // Set dynamic default to current system date (if in 2026)
+            const today = new Date();
+            if (today.getFullYear() === 2026) {
+                currentMonth = today.getMonth();
+            } else {
+                currentMonth = 4; // Fallback to May 2026 for demonstration
+            }
+            
+            renderCalendar(currentYear, currentMonth);
+        }, 300);
+
+        // Modal functions for "Read More" cultural events
+        window.openEventDetailModal = function(title, description, imgUrl, dateStr, pillLabel, pillClass, bgClass, icon) {
+            const modal = document.getElementById('culture-detail-modal');
+            if (!modal) return;
+            const modalBox = modal.querySelector('div:not(.absolute)');
+            const modalTitle = document.getElementById('modal-event-title');
+            const modalDesc = document.getElementById('modal-event-desc');
+            const modalImg = document.getElementById('modal-event-img');
+            const modalPlaceholder = document.getElementById('modal-event-placeholder');
+            const modalIcon = document.getElementById('modal-event-placeholder-icon');
+            const modalPill = document.getElementById('modal-event-pill');
+            const modalDate = document.getElementById('modal-event-date');
+            
+            modalTitle.textContent = title;
+            modalDesc.textContent = description;
+            modalDate.textContent = dateStr;
+            
+            // Set up pill badge
+            modalPill.className = `culture-pill ${pillClass} text-xs`;
+            modalPill.textContent = pillLabel;
+            
+            // Set up image or placeholder
+            if (imgUrl) {
+                modalImg.src = imgUrl;
+                modalImg.classList.remove('hidden');
+                modalPlaceholder.classList.add('hidden');
+            } else {
+                modalImg.classList.add('hidden');
+                modalPlaceholder.classList.remove('hidden');
+                
+                // Clear existing bg classes and set the new one
+                modalPlaceholder.className = `w-full h-full ${bgClass} flex items-center justify-center relative`;
+                modalIcon.textContent = icon;
+            }
+            
+            // Show modal
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden'; // Lock background scroll
+            
+            // Animate box in
+            setTimeout(() => {
+                modalBox.classList.remove('scale-95', 'opacity-0');
+                modalBox.classList.add('scale-100', 'opacity-100');
+            }, 10);
+        }
+
+        window.closeEventDetailModal = function() {
+            const modal = document.getElementById('culture-detail-modal');
+            if (!modal) return;
+            const modalBox = modal.querySelector('div:not(.absolute)');
+            
+            modalBox.classList.remove('scale-100', 'opacity-100');
+            modalBox.classList.add('scale-95', 'opacity-0');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = ''; // Unlock scroll
+            }, 200);
+        }
     </script>
     @endscript
 </div>

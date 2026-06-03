@@ -285,50 +285,74 @@ new #[Layout('layouts.app')] class extends Component {
         </div>
     </div>
 
-    <!-- Booking Modal -->
+    {{-- Booking Modal --}}
     @if($showBookingModal)
-        <div class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overflow-x-hidden bg-black/80 backdrop-blur-sm p-4 sm:p-0">
-            <div class="relative w-full max-w-lg bg-gray-800 rounded-3xl shadow-2xl border border-gray-700 p-8 transform transition-all animate-fade-in-up">
-                
-                <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4">
+            <div class="relative w-full max-w-md bg-gray-900 rounded-3xl shadow-2xl border border-white/10 flex flex-col max-h-[90vh]">
 
-                <div class="flex justify-between items-start mb-6 border-b border-gray-700/50 pb-6 relative z-10">
-                    <div>
-                        <h3 class="text-2xl font-bold text-white mb-1">Book Facility</h3>
-                        <p class="text-indigo-400 text-sm font-medium">{{ $selectedFacility }}</p>
-                    </div>
-                    <button wire:click="$toggle('showBookingModal')" class="text-gray-500 hover:text-white bg-gray-900 hover:bg-gray-700 p-2 rounded-full transition-colors border border-gray-700">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                    </button>
-                </div>
-
-                <form wire:submit="submitBooking" class="space-y-6 relative z-10">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-300 mb-2">Select Date</label>
-                        <input wire:model="booking_date" type="date" class="w-full rounded-xl border-gray-600 bg-gray-900 text-white shadow-inner focus:border-indigo-500 focus:ring-indigo-500 p-3 color-scheme-dark">
-                        @error('booking_date') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-6">
+                {{-- Gradient Header --}}
+                <div class="relative flex-shrink-0 bg-gradient-to-r from-indigo-700 via-purple-700 to-blue-800 px-8 pt-7 pb-6 rounded-t-3xl overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
+                    <div class="relative flex justify-between items-start">
                         <div>
-                            <label class="block text-sm font-bold text-gray-300 mb-2">Start Time</label>
-                            <input wire:model="start_time" type="time" class="w-full rounded-xl border-gray-600 bg-gray-900 text-white shadow-inner focus:border-indigo-500 focus:ring-indigo-500 p-3 color-scheme-dark">
-                            @error('start_time') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-white/10 border border-white/20 text-indigo-200 mb-3 uppercase tracking-wider">
+                                🏢 Facility Reservation
+                            </span>
+                            <h3 class="text-2xl font-black text-white tracking-tight">Book Facility</h3>
+                            <p class="text-sm text-indigo-200/80 mt-1">{{ $selectedFacility }}</p>
                         </div>
-                        <div>
-                            <label class="block text-sm font-bold text-gray-300 mb-2">End Time</label>
-                            <input wire:model="end_time" type="time" class="w-full rounded-xl border-gray-600 bg-gray-900 text-white shadow-inner focus:border-indigo-500 focus:ring-indigo-500 p-3 color-scheme-dark">
-                            @error('end_time') <span class="text-red-400 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
-                        </div>
-                    </div>
-
-                    <div class="pt-6 mt-2 border-t border-gray-700/50">
-                        <button type="submit" class="w-full py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.4)] transition-all flex justify-center items-center gap-2">
-                            <svg wire:loading wire:target="submitBooking" class="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                            Confirm Reservation
+                        <button wire:click="$toggle('showBookingModal')" class="text-white/60 hover:text-white bg-white/10 hover:bg-white/20 p-2.5 rounded-full transition-all duration-300 border border-white/10 hover:rotate-90 shrink-0 ml-4">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
                         </button>
                     </div>
-                </form>
+                </div>
+
+                {{-- Form Body --}}
+                <div class="overflow-y-auto flex-1">
+                    <form wire:submit="submitBooking" class="p-7 space-y-5">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-300 mb-2">Select Date <span class="text-red-400">*</span></label>
+                            <input wire:model="booking_date" type="date" required
+                                class="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all" style="color-scheme:dark">
+                            @error('booking_date') <span class="text-red-400 text-xs mt-1.5 block">{{ $message }}</span> @enderror
+                        </div>
+
+                        <div class="bg-gray-800/80 border border-purple-500/30 rounded-2xl p-4 space-y-3">
+                            <div class="flex items-center gap-2 text-purple-400 font-bold text-xs uppercase tracking-wider">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Time Slot
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-400 mb-2">Start Time <span class="text-red-400">*</span></label>
+                                    <input wire:model="start_time" type="time" required
+                                        class="w-full px-3 py-2.5 bg-gray-900 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm" style="color-scheme:dark">
+                                    @error('start_time') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-400 mb-2">End Time <span class="text-red-400">*</span></label>
+                                    <input wire:model="end_time" type="time" required
+                                        class="w-full px-3 py-2.5 bg-gray-900 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all text-sm" style="color-scheme:dark">
+                                    @error('end_time') <span class="text-red-400 text-xs mt-1 block">{{ $message }}</span> @enderror
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-3 pt-2 border-t border-gray-700/60">
+                            <button type="button" wire:click="$toggle('showBookingModal')"
+                                class="flex-1 px-5 py-3 bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-300 font-semibold rounded-xl transition-all text-sm">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="flex-1 px-5 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl shadow-lg shadow-purple-900/40 transition-all duration-300 hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm">
+                                <svg wire:loading wire:target="submitBooking" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                <svg wire:loading.remove wire:target="submitBooking" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+                                <span wire:loading.remove wire:target="submitBooking">Confirm Reservation</span>
+                                <span wire:loading wire:target="submitBooking">Booking...</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     @endif
